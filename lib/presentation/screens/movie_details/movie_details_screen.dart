@@ -283,7 +283,7 @@ class MovieDetailsScreen extends ConsumerWidget {
               child: Center(child: CircularProgressIndicator()),
             ),
           ),
-          error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+          error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],

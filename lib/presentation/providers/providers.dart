@@ -12,7 +12,6 @@ import '../../data/repositories/movie_repository_impl.dart';
 import '../../data/repositories/watchlist_repository_impl.dart';
 import '../../domain/repositories/movie_repository.dart';
 import '../../domain/repositories/watchlist_repository.dart';
-import 'auth_providers.dart';
 
 export 'auth_providers.dart';
 

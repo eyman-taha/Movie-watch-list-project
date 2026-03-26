@@ -10,38 +10,39 @@ class WatchlistItemModel extends WatchlistItem {
   @override
   @HiveField(0)
   final String? userId;
-  
+
   @override
   @HiveField(1)
   final int movieId;
-  
+
   @override
   @HiveField(2)
   final MovieModel movie;
-  
+
   @HiveField(3)
   final int statusIndex;
-  
+
   @override
   @HiveField(4)
   final double? userRating;
-  
+
   @override
   @HiveField(5)
   final bool isFavorite;
-  
+
   @override
   @HiveField(6)
   final DateTime addedAt;
-  
+
   @override
   @HiveField(7)
   final DateTime updatedAt;
-  
+
   @override
   @HiveField(8)
   final DateTime? watchedAt;
-  
+
+  @override
   @HiveField(9)
   final String? note;
 
@@ -57,17 +58,17 @@ class WatchlistItemModel extends WatchlistItem {
     this.watchedAt,
     this.note,
   }) : super(
-          userId: userId,
-          movieId: movieId,
-          movie: movie,
-          status: WatchlistStatus.values[statusIndex],
-          userRating: userRating,
-          isFavorite: isFavorite,
-          addedAt: addedAt,
-          updatedAt: updatedAt,
-          watchedAt: watchedAt,
-          note: note,
-        );
+         userId: userId,
+         movieId: movieId,
+         movie: movie,
+         status: WatchlistStatus.values[statusIndex],
+         userRating: userRating,
+         isFavorite: isFavorite,
+         addedAt: addedAt,
+         updatedAt: updatedAt,
+         watchedAt: watchedAt,
+         note: note,
+       );
 
   factory WatchlistItemModel.fromEntity(WatchlistItem item) {
     return WatchlistItemModel(
