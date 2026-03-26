@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'core/theme/app_theme.dart';
 import 'presentation/providers/providers.dart';
@@ -18,6 +20,18 @@ import 'presentation/screens/movie_details/movie_details_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase for both Android and Web
+  await Firebase.initializeApp(
+    options: FirebaseOptions(
+      apiKey: "AIzaSyC8QTF7t3pve7zBgs_t5cXMswsF9h9bmbU",
+      authDomain: "movie-watch-list-d2665.firebaseapp.com",
+      projectId: "movie-watch-list-d2665",
+      storageBucket: "movie-watch-list-d2665.firebasestorage.app",
+      messagingSenderId: "7372161177",
+      appId: "1:7372161177:web:d76be5c0722c4467f7f808",
+    ),
+  );
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

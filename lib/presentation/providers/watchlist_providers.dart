@@ -104,7 +104,8 @@ final watchlistByStatusProvider =
     ) {
       final watchlist = ref.watch(watchlistProvider);
       return watchlist.whenData(
-        (items) => items.where((item) => item.status == status).toList(),
+        (List<WatchlistItem> items) =>
+            items.where((WatchlistItem item) => item.status == status).toList(),
       );
     });
 
@@ -136,21 +137,29 @@ final filteredWatchlistProvider = Provider<AsyncValue<List<WatchlistItem>>>((
   final viewMode = ref.watch(watchlistViewModeProvider);
   final watchlist = ref.watch(watchlistProvider);
 
-  return watchlist.whenData((items) {
+  return watchlist.whenData((List<WatchlistItem> items) {
     switch (viewMode) {
       case WatchlistViewMode.all:
         return items;
       case WatchlistViewMode.planToWatch:
         return items
-            .where((item) => item.status == WatchlistStatus.planToWatch)
+            .where(
+              (WatchlistItem item) =>
+                  item.status == WatchlistStatus.planToWatch,
+            )
             .toList();
       case WatchlistViewMode.stillWatching:
         return items
-            .where((item) => item.status == WatchlistStatus.stillWatching)
+            .where(
+              (WatchlistItem item) =>
+                  item.status == WatchlistStatus.stillWatching,
+            )
             .toList();
       case WatchlistViewMode.watched:
         return items
-            .where((item) => item.status == WatchlistStatus.watched)
+            .where(
+              (WatchlistItem item) => item.status == WatchlistStatus.watched,
+            )
             .toList();
     }
   });

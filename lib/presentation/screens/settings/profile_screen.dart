@@ -183,19 +183,21 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsSection(AsyncValue watchlist) {
+  Widget _buildStatsSection(AsyncValue<List<WatchlistItem>> watchlist) {
     return watchlist.when(
-      data: (items) {
+      data: (List<WatchlistItem> items) {
         final planToWatch = items
-            .where((i) => i.status == WatchlistStatus.planToWatch)
+            .where((WatchlistItem i) => i.status == WatchlistStatus.planToWatch)
             .length;
         final stillWatching = items
-            .where((i) => i.status == WatchlistStatus.stillWatching)
+            .where(
+              (WatchlistItem i) => i.status == WatchlistStatus.stillWatching,
+            )
             .length;
         final watched = items
-            .where((i) => i.status == WatchlistStatus.watched)
+            .where((WatchlistItem i) => i.status == WatchlistStatus.watched)
             .length;
-        final favorites = items.where((i) => i.isFavorite).length;
+        final favorites = items.where((WatchlistItem i) => i.isFavorite).length;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

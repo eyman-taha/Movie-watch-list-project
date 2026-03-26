@@ -39,15 +39,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _signInWithGoogle() async {
-    final success = await ref
-        .read(authNotifierProvider.notifier)
-        .signInWithGoogle();
-    if (success && mounted) {
-      context.go('/home');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
@@ -184,15 +175,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   Expanded(child: Divider(color: Colors.grey[700])),
                 ],
-              ),
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: authState.isLoading ? null : _signInWithGoogle,
-                icon: const Icon(Icons.g_mobiledata, size: 24),
-                label: const Text('Quick Demo Login'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
               ),
               const SizedBox(height: 24),
               Row(

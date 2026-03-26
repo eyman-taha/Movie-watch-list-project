@@ -1,7 +1,5 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'providers.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class User {
   final String id;
@@ -26,112 +24,13 @@ class User {
   }
 }
 
-class LocalAuthService {
-  static const String _userIdKey = 'user_id';
-  static const String _userEmailKey = 'user_email';
-  static const String _userNameKey = 'user_name';
-  static const String _isLoggedInKey = 'is_logged_in';
-
-  final SharedPreferences _prefs;
-
-  LocalAuthService(this._prefs);
-
-  User? get currentUser {
-    final isLoggedIn = _prefs.getBool(_isLoggedInKey) ?? false;
-    if (!isLoggedIn) return null;
-
-    final id = _prefs.getString(_userIdKey);
-    final email = _prefs.getString(_userEmailKey);
-
-    if (id == null || email == null) return null;
-
-    return User(
-      id: id,
-      email: email,
-      displayName: _prefs.getString(_userNameKey),
-    );
-  }
-
-  bool get isLoggedIn => _prefs.getBool(_isLoggedInKey) ?? false;
-
-  Future<User> signIn(String email, String password) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (email.isEmpty || password.isEmpty) {
-      throw AuthException('Email and password are required');
-    }
-
-    if (password.length < 6) {
-      throw AuthException('Password must be at least 6 characters');
-    }
-
-    final userId = DateTime.now().millisecondsSinceEpoch.toString();
-
-    await _prefs.setString(_userIdKey, userId);
-    await _prefs.setString(_userEmailKey, email);
-    await _prefs.setBool(_isLoggedInKey, true);
-
-    return User(id: userId, email: email);
-  }
-
-  Future<User> signUp(String email, String password, String name) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (email.isEmpty || password.isEmpty || name.isEmpty) {
-      throw AuthException('All fields are required');
-    }
-
-    if (!email.contains('@')) {
-      throw AuthException('Invalid email address');
-    }
-
-    if (password.length < 6) {
-      throw AuthException('Password must be at least 6 characters');
-    }
-
-    final userId = DateTime.now().millisecondsSinceEpoch.toString();
-
-    await _prefs.setString(_userIdKey, userId);
-    await _prefs.setString(_userEmailKey, email);
-    await _prefs.setString(_userNameKey, name);
-    await _prefs.setBool(_isLoggedInKey, true);
-
-    return User(id: userId, email: email, displayName: name);
-  }
-
-  Future<void> signOut() async {
-    await _prefs.remove(_userIdKey);
-    await _prefs.remove(_userEmailKey);
-    await _prefs.remove(_userNameKey);
-    await _prefs.setBool(_isLoggedInKey, false);
-  }
-
-  Future<void> updateProfile({String? displayName, String? photoUrl}) async {
-    if (displayName != null) {
-      await _prefs.setString(_userNameKey, displayName);
-    }
-    if (photoUrl != null) {
-      await _prefs.setString('user_photo', photoUrl);
-    }
-  }
-}
-
-class AuthException implements Exception {
-  final String message;
-  AuthException(this.message);
-
-  @override
-  String toString() => message;
-}
-
-final authServiceProvider = Provider<LocalAuthService>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return LocalAuthService(prefs);
+final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
+  return FirebaseAuth.instance;
 });
 
 final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return AuthNotifier(authService);
+  final auth = ref.watch(firebaseAuthProvider);
+  return AuthNotifier(auth);
 });
 
 final authNotifierProvider = authStateProvider;
@@ -147,27 +46,69 @@ final isAuthenticatedProvider = Provider<bool>((ref) {
 });
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  final LocalAuthService _authService;
+  final FirebaseAuth _auth;
 
-  AuthNotifier(this._authService) : super(AuthState.initial()) {
-    _checkAuthState();
+  AuthNotifier(this._auth) : super(AuthState.initial()) {
+    _init();
   }
 
-  void _checkAuthState() {
-    final user = _authService.currentUser;
-    if (user != null) {
-      state = AuthState(user: user);
-    }
+  void _init() {
+    _auth.authStateChanges().listen((firebaseUser) {
+      if (firebaseUser != null) {
+        state = AuthState(
+          user: User(
+            id: firebaseUser.uid,
+            email: firebaseUser.email ?? '',
+            displayName: firebaseUser.displayName,
+            photoUrl: firebaseUser.photoURL,
+          ),
+        );
+      } else {
+        state = AuthState.initial();
+      }
+    });
   }
 
   Future<bool> signInWithEmail(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final user = await _authService.signIn(email, password);
-      state = AuthState(user: user, isLoading: false);
-      return true;
-    } on AuthException catch (e) {
-      state = state.copyWith(isLoading: false, error: e.message);
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (credential.user != null) {
+        state = AuthState(
+          user: User(
+            id: credential.user!.uid,
+            email: credential.user!.email ?? '',
+            displayName: credential.user!.displayName,
+            photoUrl: credential.user!.photoURL,
+          ),
+          isLoading: false,
+        );
+        return true;
+      }
+      state = state.copyWith(isLoading: false);
+      return false;
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'No user found with this email';
+          break;
+        case 'wrong-password':
+          message = 'Wrong password';
+          break;
+        case 'invalid-email':
+          message = 'Invalid email address';
+          break;
+        case 'user-disabled':
+          message = 'This account has been disabled';
+          break;
+        default:
+          message = e.message ?? 'An error occurred';
+      }
+      state = state.copyWith(isLoading: false, error: message);
       return false;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -182,26 +123,41 @@ class AuthNotifier extends StateNotifier<AuthState> {
   ) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final user = await _authService.signUp(email, password, name);
-      state = AuthState(user: user, isLoading: false);
-      return true;
-    } on AuthException catch (e) {
-      state = state.copyWith(isLoading: false, error: e.message);
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (credential.user != null) {
+        await credential.user!.updateDisplayName(name);
+        state = AuthState(
+          user: User(
+            id: credential.user!.uid,
+            email: credential.user!.email ?? '',
+            displayName: name,
+            photoUrl: credential.user!.photoURL,
+          ),
+          isLoading: false,
+        );
+        return true;
+      }
+      state = state.copyWith(isLoading: false);
       return false;
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-      return false;
-    }
-  }
-
-  Future<bool> signInWithGoogle() async {
-    state = state.copyWith(isLoading: true, error: null);
-    try {
-      final user = await _authService.signIn('google@gmail.com', 'google123');
-      state = AuthState(user: user, isLoading: false);
-      return true;
-    } on AuthException catch (e) {
-      state = state.copyWith(isLoading: false, error: e.message);
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = 'This email is already registered';
+          break;
+        case 'invalid-email':
+          message = 'Invalid email address';
+          break;
+        case 'weak-password':
+          message = 'Password should be at least 6 characters';
+          break;
+        default:
+          message = e.message ?? 'An error occurred';
+      }
+      state = state.copyWith(isLoading: false, error: message);
       return false;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -210,21 +166,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> signOut() async {
-    await _authService.signOut();
+    await _auth.signOut();
     state = AuthState.initial();
   }
 
   Future<void> updateProfile({String? displayName, String? photoUrl}) async {
-    await _authService.updateProfile(
-      displayName: displayName,
-      photoUrl: photoUrl,
-    );
-    if (state.user != null) {
-      final updatedUser = state.user!.copyWith(
-        displayName: displayName,
-        photoUrl: photoUrl,
-      );
-      state = state.copyWith(user: updatedUser);
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        if (displayName != null) {
+          await user.updateDisplayName(displayName);
+        }
+        if (photoUrl != null) {
+          await user.updatePhotoURL(photoUrl);
+        }
+        state = state.copyWith(
+          user: state.user?.copyWith(
+            displayName: displayName,
+            photoUrl: photoUrl,
+          ),
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
     }
   }
 
@@ -235,14 +199,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> resetPassword(String email) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (email.isEmpty || !email.contains('@')) {
-        throw AuthException('Invalid email address');
-      }
+      await _auth.sendPasswordResetEmail(email: email);
       state = state.copyWith(isLoading: false);
       return true;
-    } on AuthException catch (e) {
-      state = state.copyWith(isLoading: false, error: e.message);
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'invalid-email':
+          message = 'Invalid email address';
+          break;
+        case 'user-not-found':
+          message = 'No user found with this email';
+          break;
+        default:
+          message = e.message ?? 'An error occurred';
+      }
+      state = state.copyWith(isLoading: false, error: message);
       return false;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

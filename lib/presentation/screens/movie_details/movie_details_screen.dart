@@ -48,13 +48,14 @@ class MovieDetailsScreen extends ConsumerWidget {
   ) {
     final isInWatchlist =
         watchlistAsync.whenOrNull(
-          data: (items) => items.any((item) => item.movieId == movie.id),
+          data: (List<WatchlistItem> items) =>
+              items.any((WatchlistItem item) => item.movieId == movie.id),
         ) ??
         false;
 
     final watchlistItem = watchlistAsync.whenOrNull(
-      data: (items) => items.firstWhere(
-        (item) => item.movieId == movie.id,
+      data: (List<WatchlistItem> items) => items.firstWhere(
+        (WatchlistItem item) => item.movieId == movie.id,
         orElse: () => WatchlistItem(
           movieId: movie.id,
           movie: movie.toMovie(),
