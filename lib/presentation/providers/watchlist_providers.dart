@@ -21,7 +21,7 @@ final watchlistProvider =
 
 class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
   final WatchlistRepository _repository;
-  final String? _userId;
+  String? _userId;
 
   WatchlistNotifier(this._repository, this._userId)
     : super(const AsyncValue.loading()) {
@@ -68,7 +68,6 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
       await _repository.addItem(item);
     } catch (e) {
       state = AsyncValue.data(currentItems);
-      rethrow;
     }
   }
 
@@ -96,7 +95,6 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
       await _repository.updateItem(updated);
     } catch (e) {
       state = AsyncValue.data(currentItems);
-      rethrow;
     }
   }
 
@@ -122,7 +120,6 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
         await _repository.updateItem(updated);
       } catch (e) {
         state = AsyncValue.data(currentItems);
-        rethrow;
       }
     }
   }
@@ -140,7 +137,6 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
       await _repository.removeItem(movieId);
     } catch (e) {
       state = AsyncValue.data(currentItems);
-      rethrow;
     }
   }
 
@@ -149,6 +145,7 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
   }
 
   void syncWithUser(String? userId) {
+    _userId = userId;
     _repository.setCurrentUser(userId);
     _load();
   }

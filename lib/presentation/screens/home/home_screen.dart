@@ -111,7 +111,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       data: (movies) {
         if (_trendingCount != movies.length) {
           _trendingCount = movies.length;
-          WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
+          WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _startAutoScroll(); });
         }
         return _buildCarousel(movies);
       },

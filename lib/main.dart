@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -29,11 +30,19 @@ import 'presentation/screens/movie_details/movie_details_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    // Firebase init failure — app will gracefully degrade
+  }
 
-  await NotificationService().initialize();
+  try {
+    await NotificationService().initialize();
+  } catch (e) {
+    // FCM init failure — push notifications unavailable
+  }
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -65,7 +74,8 @@ GoRouter createRouter(Ref ref) {
       final isPublicRoute =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
-          state.matchedLocation == '/onboarding';
+          state.matchedLocation == '/onboarding' ||
+          state.matchedLocation == '/forgot-password';
 
       if (!isLoggedIn && !isPublicRoute && state.matchedLocation != '/') {
         return '/login';
@@ -149,7 +159,16 @@ GoRouter createRouter(Ref ref) {
         path: '/movie/:id',
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
-          final movieId = int.parse(state.pathParameters['id']!);
+          final movieId = int.tryParse(state.pathParameters['id'] ?? '');
+          if (movieId == null) {
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: const Scaffold(
+                body: Center(child: Text('Invalid movie ID')),
+              ),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
+            );
+          }
           return CustomTransitionPage(
             key: state.pageKey,
             child: MovieDetailsScreen(movieId: movieId),
@@ -190,6 +209,9 @@ class CineWatchApp extends ConsumerStatefulWidget {
 }
 
 class _CineWatchAppState extends ConsumerState<CineWatchApp> {
+  final DeepLinkHandler _deepLinkHandler = DeepLinkHandler();
+  StreamSubscription<RemoteMessage>? _messageSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -198,16 +220,22 @@ class _CineWatchAppState extends ConsumerState<CineWatchApp> {
     });
   }
 
+  @override
+  void dispose() {
+    _deepLinkHandler.dispose();
+    _messageSubscription?.cancel();
+    super.dispose();
+  }
+
   void _initNotifications() {
     final context = _rootNavigatorKey.currentContext;
     if (context == null) return;
 
-    final deepLinkHandler = DeepLinkHandler();
-    deepLinkHandler.initialize(_rootNavigatorKey);
+    _deepLinkHandler.initialize(_rootNavigatorKey);
 
     NotificationService.handleNotificationOpenedApp(context, ref);
 
-    FirebaseMessaging.onMessage.listen((message) {
+    _messageSubscription = FirebaseMessaging.onMessage.listen((message) {
       if (context.mounted) {
         NotificationService.handleForegroundMessage(context, ref, message);
       }

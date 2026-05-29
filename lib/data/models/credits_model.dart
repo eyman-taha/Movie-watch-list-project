@@ -68,12 +68,14 @@ class CreditsModel extends Credits {
 
   factory CreditsModel.fromJson(Map<String, dynamic> json) {
     return CreditsModel(
-      cast: (json['cast'] as List<dynamic>)
-          .map((e) => CastMemberModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      crew: (json['crew'] as List<dynamic>)
-          .map((e) => CrewMemberModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      cast: (json['cast'] as List<dynamic>?)
+              ?.map((e) => CastMemberModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      crew: (json['crew'] as List<dynamic>?)
+              ?.map((e) => CrewMemberModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 

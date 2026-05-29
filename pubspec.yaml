@@ -60,7 +60,7 @@ dependencies:
   cloud_firestore: ^5.4.0
   firebase_messaging: ^15.0.0
   
-  hive: any
+  hive: ^2.2.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

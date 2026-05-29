@@ -452,11 +452,12 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _showEditProfile(BuildContext context, WidgetRef ref) {
+  Future<void> _showEditProfile(BuildContext context, WidgetRef ref) async {
     final user = ref.read(currentUserProvider);
     final nameController = TextEditingController(text: user?.displayName ?? '');
 
-    showModalBottomSheet(
+    try {
+      await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -530,6 +531,9 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+    } finally {
+      nameController.dispose();
+    }
   }
 
   void _showAbout(BuildContext context) {

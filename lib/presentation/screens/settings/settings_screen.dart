@@ -26,9 +26,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _loadNotificationPref() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
     });
+  }
+
+  Future<void> _openUrl(String url) async {
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open: $url'), behavior: SnackBarBehavior.floating),
+        );
+      }
+    }
   }
 
   @override
@@ -125,14 +138,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: 'Privacy Policy',
             subtitle: 'Learn how we handle your data',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => launchUrl(Uri.parse('https://github.com/eyman-taha/Movie-watch-list-project/blob/main/PRIVACY.md'), mode: LaunchMode.externalApplication),
+            onTap: () => _openUrl('https://github.com/eyman-taha/Movie-watch-list-project/blob/main/PRIVACY.md'),
           ),
           _buildSettingsTile(
             icon: Icons.description_outlined,
             title: 'Terms of Service',
             subtitle: 'Read our terms',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => launchUrl(Uri.parse('https://github.com/eyman-taha/Movie-watch-list-project/blob/main/TERMS.md'), mode: LaunchMode.externalApplication),
+            onTap: () => _openUrl('https://github.com/eyman-taha/Movie-watch-list-project/blob/main/TERMS.md'),
           ),
           _buildSettingsTile(
             icon: Icons.code_outlined,
@@ -152,14 +165,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: 'Help & FAQ',
             subtitle: 'Get answers to common questions',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => launchUrl(Uri.parse('https://github.com/eyman-taha/Movie-watch-list-project/issues'), mode: LaunchMode.externalApplication),
+            onTap: () => _openUrl('https://github.com/eyman-taha/Movie-watch-list-project/issues'),
           ),
           _buildSettingsTile(
             icon: Icons.feedback_outlined,
             title: 'Send Feedback',
             subtitle: 'Help us improve the app',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => launchUrl(Uri.parse('https://github.com/eyman-taha/Movie-watch-list-project/issues/new'), mode: LaunchMode.externalApplication),
+            onTap: () => _openUrl('https://github.com/eyman-taha/Movie-watch-list-project/issues/new'),
           ),
           const SizedBox(height: 32),
           _buildSignOutButton(),

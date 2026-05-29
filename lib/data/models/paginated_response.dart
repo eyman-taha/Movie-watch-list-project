@@ -29,9 +29,10 @@ class MovieListResponse extends PaginatedResponse<MovieModel> {
       page: json['page'] as int,
       totalPages: json['total_pages'] as int,
       totalResults: json['total_results'] as int,
-      results: (json['results'] as List<dynamic>)
-          .map((e) => MovieModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      results: (json['results'] as List<dynamic>?)
+              ?.map((e) => MovieModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 }

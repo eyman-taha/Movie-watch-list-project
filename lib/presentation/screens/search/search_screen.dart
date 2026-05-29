@@ -37,11 +37,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       final history = await ref
           .read(searchHistoryDataSourceProvider)
           .getSearchHistory();
+      if (!mounted) return;
       setState(() {
         _recentSearches = history;
         _isLoadingHistory = false;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() {
         _recentSearches = [];
         _isLoadingHistory = false;
