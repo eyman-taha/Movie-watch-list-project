@@ -41,11 +41,6 @@ final currentUserProvider = Provider<User?>((ref) {
   return authState.user;
 });
 
-final isAuthenticatedProvider = Provider<bool>((ref) {
-  final user = ref.watch(currentUserProvider);
-  return user != null;
-});
-
 class AuthNotifier extends StateNotifier<AuthState> {
   final FirebaseAuth _auth;
   StreamSubscription? _authSubscription;

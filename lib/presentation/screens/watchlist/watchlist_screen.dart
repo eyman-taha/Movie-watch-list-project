@@ -40,8 +40,9 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
   @override
   Widget build(BuildContext context) {
     final viewMode = ref.watch(watchlistViewModeProvider);
-    final watchlist = ref.watch(filteredWatchlistProvider);
+    final watchlist = ref.watch(sortedFilteredWatchlistProvider);
     final totalWatchlist = ref.watch(watchlistProvider);
+    final sortMode = ref.watch(watchlistSortModeProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -72,7 +73,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                         totalWatchlist.when(
                           data: (items) => _buildBadge(items.length),
                           loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
+                          error: (_, _) => const SizedBox.shrink(),
                         ),
                       ],
                     ),
@@ -82,7 +83,53 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                       style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                     ),
                     const SizedBox(height: 20),
-                    _buildStatusTabs(ref, viewMode),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatusTabs(ref, viewMode),
+                        ),
+                        PopupMenuButton<WatchlistSortMode>(
+                          icon: Icon(
+                            sortMode == WatchlistSortMode.addedDateAsc
+                                ? Icons.sort_by_alpha
+                                : Icons.sort,
+                            color: Colors.grey[400],
+                          ),
+                          onSelected: (mode) {
+                            ref.read(watchlistSortModeProvider.notifier).state = mode;
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          itemBuilder: (ctx) => [
+                            _sortItem(
+                              WatchlistSortMode.addedDateDesc,
+                              'Newest First',
+                              sortMode,
+                              Icons.arrow_downward,
+                            ),
+                            _sortItem(
+                              WatchlistSortMode.addedDateAsc,
+                              'Oldest First',
+                              sortMode,
+                              Icons.arrow_upward,
+                            ),
+                            _sortItem(
+                              WatchlistSortMode.rating,
+                              'Highest Rated',
+                              sortMode,
+                              Icons.star,
+                            ),
+                            _sortItem(
+                              WatchlistSortMode.title,
+                              'Title A-Z',
+                              sortMode,
+                              Icons.sort_by_alpha,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -97,6 +144,30 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  PopupMenuItem<WatchlistSortMode> _sortItem(
+    WatchlistSortMode mode,
+    String label,
+    WatchlistSortMode current,
+    IconData icon,
+  ) {
+    final isSelected = mode == current;
+    return PopupMenuItem(
+      value: mode,
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: isSelected ? AppTheme.primaryColor : Colors.grey),
+          const SizedBox(width: 10),
+          Text(label, style: TextStyle(
+            color: isSelected ? AppTheme.primaryColor : null,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          )),
+          if (isSelected) const Spacer(),
+          if (isSelected) const Icon(Icons.check, size: 16, color: AppTheme.primaryColor),
+        ],
       ),
     );
   }

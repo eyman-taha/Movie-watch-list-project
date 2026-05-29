@@ -2,8 +2,7 @@ import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:html' as html;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/theme/app_theme.dart';
@@ -239,7 +238,7 @@ class MovieDetailsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 _buildGenreChips(movie.genres.map((g) => g.name).toList()),
                 const SizedBox(height: 24),
-                _buildActionButtons(context, ref, movie, isInWatchlist),
+                _buildActionButtons(context, ref, movie, isInWatchlist, watchlistItem),
                 const SizedBox(height: 24),
                 const Text(
                   'Overview',
@@ -335,75 +334,90 @@ class MovieDetailsScreen extends ConsumerWidget {
     WidgetRef ref,
     MovieDetails movie,
     bool isInWatchlist,
+    WatchlistItem? watchlistItem,
   ) {
+    if (isInWatchlist && watchlistItem != null) {
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _showStatusBottomSheet(
+                      context, ref, movie, watchlistItem,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _statusColor(watchlistItem.status)
+                            .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _statusColor(watchlistItem.status)
+                              .withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(_statusIcon(watchlistItem.status),
+                              size: 18,
+                              color: _statusColor(watchlistItem.status)),
+                          const SizedBox(width: 8),
+                          Text(
+                            watchlistItem.status.displayName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: _statusColor(watchlistItem.status),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.arrow_drop_down,
+                              size: 20,
+                              color: _statusColor(watchlistItem.status)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _openTrailer(context, movie),
+                  icon: const Icon(Icons.play_circle_outline),
+                  label: const Text('Trailer'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              onPressed: () => _showRemoveConfirm(context, ref, movie),
+              icon: const Icon(Icons.delete_outline, size: 18,
+                  color: Colors.red),
+              label: const Text('Remove from Watchlist',
+                  style: TextStyle(color: Colors.red)),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
         Expanded(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: isInWatchlist
-                ? OutlinedButton.icon(
-                    key: const ValueKey('remove'),
-                    onPressed: () async {
-                      try {
-                        await ref
-                            .read(watchlistProvider.notifier)
-                            .removeFromWatchlist(movie.id);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '${movie.title} removed from watchlist',
-                              ),
-                            ),
-                          );
-                        }
-                      } catch (_) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Failed to remove'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    icon: const Icon(Icons.check),
-                    label: const Text('In Watchlist'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.green,
-                      side: const BorderSide(color: Colors.green),
-                    ),
-                  )
-                : ElevatedButton.icon(
-                    key: const ValueKey('add'),
-                    onPressed: () async {
-                      try {
-                        await ref
-                            .read(watchlistProvider.notifier)
-                            .addToWatchlist(movie.toMovie());
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('${movie.title} added to watchlist'),
-                            ),
-                          );
-                        }
-                      } catch (_) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Failed to add'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add to Watchlist'),
-                  ),
+          child: ElevatedButton.icon(
+            onPressed: () => _showAddBottomSheet(context, ref, movie),
+            icon: const Icon(Icons.add),
+            label: const Text('Add to Watchlist'),
           ),
         ),
         const SizedBox(width: 12),
@@ -418,12 +432,342 @@ class MovieDetailsScreen extends ConsumerWidget {
     );
   }
 
+  IconData _statusIcon(WatchlistStatus status) {
+    switch (status) {
+      case WatchlistStatus.planToWatch:
+        return Icons.schedule;
+      case WatchlistStatus.stillWatching:
+        return Icons.play_circle;
+      case WatchlistStatus.watched:
+        return Icons.check_circle;
+    }
+  }
+
+  Color _statusColor(WatchlistStatus status) {
+    switch (status) {
+      case WatchlistStatus.planToWatch:
+        return Colors.orange;
+      case WatchlistStatus.stillWatching:
+        return Colors.blue;
+      case WatchlistStatus.watched:
+        return Colors.green;
+    }
+  }
+
+  void _showStatusBottomSheet(
+    BuildContext context,
+    WidgetRef ref,
+    MovieDetails movie,
+    WatchlistItem item,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[600],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text('Change Status',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            for (final s in WatchlistStatus.values) ...[
+              SizedBox(
+                width: double.infinity,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: s == item.status ? null : () async {
+                      Navigator.pop(ctx);
+                      try {
+                        await ref
+                            .read(watchlistProvider.notifier)
+                            .updateStatus(movie.id, s);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Status: ${s.displayName}'),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to update status'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _statusColor(s).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: s == item.status
+                              ? _statusColor(s)
+                              : _statusColor(s).withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(_statusIcon(s), color: _statusColor(s)),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(s.displayName,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600)),
+                                    if (s == item.status)
+                                      const Padding(
+                                        padding: EdgeInsets.only(left: 8),
+                                        child: Icon(Icons.check,
+                                            size: 16, color: Colors.green),
+                                      ),
+                                  ],
+                                ),
+                                Text(
+                                  _statusDescription(s),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddBottomSheet(BuildContext context, WidgetRef ref, MovieDetails movie) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[600],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text('Add to Watchlist',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            for (final s in WatchlistStatus.values) ...[
+              SizedBox(
+                width: double.infinity,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      try {
+                        await ref
+                            .read(watchlistProvider.notifier)
+                            .addToWatchlist(movie.toMovie(), status: s);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${movie.title} added as ${s.displayName}'),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to add'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _statusColor(s).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _statusColor(s).withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(_statusIcon(s), color: _statusColor(s)),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(s.displayName,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600)),
+                              Text(
+                                _statusDescription(s),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _statusDescription(WatchlistStatus status) {
+    switch (status) {
+      case WatchlistStatus.planToWatch:
+        return 'Movies you plan to watch in the future';
+      case WatchlistStatus.stillWatching:
+        return 'Movies you are currently watching';
+      case WatchlistStatus.watched:
+        return 'Movies you have already watched';
+    }
+  }
+
+  void _showRemoveConfirm(
+      BuildContext context, WidgetRef ref, MovieDetails movie) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[600],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Icon(Icons.delete_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            const Text('Remove from Watchlist?',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      try {
+                        await ref
+                            .read(watchlistProvider.notifier)
+                            .removeFromWatchlist(movie.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${movie.title} removed'),
+                            ),
+                          );
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to remove'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    child: const Text('Remove'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _openTrailer(BuildContext context, MovieDetails movie) async {
     final trailer = movie.trailer;
     if (trailer != null && trailer.isYouTube) {
       final url = 'https://www.youtube.com/watch?v=${trailer.key}';
-      if (kIsWeb) {
-        html.window.open(url, '_blank');
+      try {
+        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not open trailer')),
+          );
+        }
       }
     } else {
       ScaffoldMessenger.of(
@@ -549,7 +893,7 @@ class SimilarMoviesList extends ConsumerWidget {
               isFavorite: isFav,
               onToggleFavorite: (fav) async {
                 if (isFav) {
-                  await ref.read(watchlistProvider.notifier).removeFromWatchlist(movie.id);
+                  await ref.read(watchlistProvider.notifier).toggleFavorite(movie.id);
                 } else {
                   await ref.read(watchlistProvider.notifier).addToWatchlist(movie, isFavorite: true);
                 }

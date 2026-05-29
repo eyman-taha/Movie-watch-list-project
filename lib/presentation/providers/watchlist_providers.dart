@@ -5,14 +5,9 @@ import '../../domain/repositories/watchlist_repository.dart';
 import '../providers/providers.dart';
 
 final watchlistProvider =
-    StateNotifierProvider<WatchlistNotifier, AsyncValue<List<WatchlistItem>>>((
-      ref,
-    ) {
+    StateNotifierProvider<WatchlistNotifier, AsyncValue<List<WatchlistItem>>>((ref) {
       final repository = ref.watch(watchlistRepositoryProvider);
       final user = ref.watch(currentUserProvider);
-<<<<<<< HEAD
-      return WatchlistNotifier(repository, user?.id);
-=======
       final notifier = WatchlistNotifier(repository, user?.id);
 
       ref.listen(currentUserProvider, (previous, next) {
@@ -22,7 +17,6 @@ final watchlistProvider =
       });
 
       return notifier;
->>>>>>> 9defcd7 (fix: convert all placeholder interactions to production-ready logic)
     });
 
 class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
@@ -31,28 +25,14 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
 
   WatchlistNotifier(this._repository, this._userId)
     : super(const AsyncValue.loading()) {
-<<<<<<< HEAD
-    _setUser();
-=======
     _repository.setCurrentUser(_userId);
->>>>>>> 9defcd7 (fix: convert all placeholder interactions to production-ready logic)
     _load();
-  }
-
-  void _setUser() {
-    if (_userId != null) {
-      (_repository as dynamic).setCurrentUser(_userId);
-    }
   }
 
   Future<void> _load() async {
     state = const AsyncValue.loading();
     try {
-<<<<<<< HEAD
-      _setUser();
-=======
       _repository.setCurrentUser(_userId);
->>>>>>> 9defcd7 (fix: convert all placeholder interactions to production-ready logic)
       final items = await _repository.getAllItems();
       state = AsyncValue.data(items);
     } catch (e, st) {
@@ -79,6 +59,9 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
     );
 
     final currentItems = List<WatchlistItem>.from(state.value ?? []);
+
+    if (currentItems.any((i) => i.movieId == movie.id)) return;
+
     state = AsyncValue.data([item, ...currentItems]);
 
     try {
@@ -93,52 +76,27 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
     final currentItems = state.value;
     if (currentItems == null) return;
 
-    final item = await _repository.getItem(movieId);
-    if (item != null) {
-      final updated = item.copyWith(
-        status: status,
-        updatedAt: DateTime.now(),
-        watchedAt: status == WatchlistStatus.watched ? DateTime.now() : null,
-      );
-
-      final updatedItems = currentItems.map((i) {
-        return i.movieId == movieId ? updated : i;
-      }).toList();
-      state = AsyncValue.data(updatedItems);
-
-      try {
-        await _repository.updateItem(updated);
-      } catch (e) {
-        state = AsyncValue.data(currentItems);
-        rethrow;
-      }
-    }
-  }
-
-  Future<void> updateRating(int movieId, double rating) async {
-    final currentItems = state.value;
-    if (currentItems == null) return;
-
     final existingItem = currentItems.where(
       (WatchlistItem i) => i.movieId == movieId,
     ).firstOrNull;
-    if (existingItem != null) {
-      final updated = existingItem.copyWith(
-        userRating: rating,
-        updatedAt: DateTime.now(),
-      );
+    if (existingItem == null) return;
 
-      final updatedItems = currentItems.map((i) {
-        return i.movieId == movieId ? updated : i;
-      }).toList();
-      state = AsyncValue.data(updatedItems);
+    final updated = existingItem.copyWith(
+      status: status,
+      updatedAt: DateTime.now(),
+      watchedAt: status == WatchlistStatus.watched ? DateTime.now() : null,
+    );
 
-      try {
-        await _repository.updateItem(updated);
-      } catch (e) {
-        state = AsyncValue.data(currentItems);
-        rethrow;
-      }
+    final updatedItems = currentItems.map((i) {
+      return i.movieId == movieId ? updated : i;
+    }).toList();
+    state = AsyncValue.data(updatedItems);
+
+    try {
+      await _repository.updateItem(updated);
+    } catch (e) {
+      state = AsyncValue.data(currentItems);
+      rethrow;
     }
   }
 
@@ -196,111 +154,60 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
   }
 }
 
-final watchlistByStatusProvider =
-    Provider.family<AsyncValue<List<WatchlistItem>>, WatchlistStatus>((
-      ref,
-      status,
-    ) {
-      final watchlist = ref.watch(watchlistProvider);
-      return watchlist.whenData(
-        (List<WatchlistItem> items) =>
-            items.where((WatchlistItem item) => item.status == status).toList(),
-      );
-    });
-
-final isInWatchlistProvider = FutureProvider.family<bool, int>((
-  ref,
-  movieId,
-) async {
-  final repository = ref.watch(watchlistRepositoryProvider);
-  return repository.isInWatchlist(movieId);
-});
-
-final watchlistItemProvider = FutureProvider.family<WatchlistItem?, int>((
-  ref,
-  movieId,
-) async {
-  final repository = ref.watch(watchlistRepositoryProvider);
-  return repository.getItem(movieId);
-});
-
 enum WatchlistViewMode { all, planToWatch, stillWatching, watched }
 
 final watchlistViewModeProvider = StateProvider<WatchlistViewMode>(
   (ref) => WatchlistViewMode.all,
 );
 
-final filteredWatchlistProvider = Provider<AsyncValue<List<WatchlistItem>>>((
-  ref,
-) {
-  final viewMode = ref.watch(watchlistViewModeProvider);
+enum WatchlistSortMode { addedDateDesc, addedDateAsc, rating, title }
+
+final watchlistSortModeProvider = StateProvider<WatchlistSortMode>(
+  (ref) => WatchlistSortMode.addedDateDesc,
+);
+
+final sortedWatchlistProvider = Provider<AsyncValue<List<WatchlistItem>>>((ref) {
   final watchlist = ref.watch(watchlistProvider);
+  final sortMode = ref.watch(watchlistSortModeProvider);
 
   return watchlist.whenData((List<WatchlistItem> items) {
+    final sorted = List<WatchlistItem>.from(items);
+    switch (sortMode) {
+      case WatchlistSortMode.addedDateDesc:
+        sorted.sort((a, b) => b.addedAt.compareTo(a.addedAt));
+      case WatchlistSortMode.addedDateAsc:
+        sorted.sort((a, b) => a.addedAt.compareTo(b.addedAt));
+      case WatchlistSortMode.rating:
+        sorted.sort((a, b) => b.movie.voteAverage.compareTo(a.movie.voteAverage));
+      case WatchlistSortMode.title:
+        sorted.sort((a, b) => a.movie.title.compareTo(b.movie.title));
+    }
+    return sorted;
+  });
+});
+
+final sortedFilteredWatchlistProvider = Provider<AsyncValue<List<WatchlistItem>>>((ref) {
+  final viewMode = ref.watch(watchlistViewModeProvider);
+  final sorted = ref.watch(sortedWatchlistProvider);
+
+  return sorted.whenData((List<WatchlistItem> items) {
     switch (viewMode) {
       case WatchlistViewMode.all:
         return items;
       case WatchlistViewMode.planToWatch:
-        return items
-            .where(
-              (WatchlistItem item) =>
-                  item.status == WatchlistStatus.planToWatch,
-            )
-            .toList();
+        return items.where(
+          (WatchlistItem item) => item.status == WatchlistStatus.planToWatch,
+        ).toList();
       case WatchlistViewMode.stillWatching:
-        return items
-            .where(
-              (WatchlistItem item) =>
-                  item.status == WatchlistStatus.stillWatching,
-            )
-            .toList();
+        return items.where(
+          (WatchlistItem item) => item.status == WatchlistStatus.stillWatching,
+        ).toList();
       case WatchlistViewMode.watched:
-        return items
-            .where(
-              (WatchlistItem item) => item.status == WatchlistStatus.watched,
-            )
-            .toList();
+        return items.where(
+          (WatchlistItem item) => item.status == WatchlistStatus.watched,
+        ).toList();
     }
   });
 });
 
-final watchlistCountProvider = Provider<int>((ref) {
-  final watchlist = ref.watch(watchlistProvider);
-  return watchlist.whenOrNull(data: (items) => items.length) ?? 0;
-});
 
-final favoritesCountProvider = Provider<int>((ref) {
-  final watchlist = ref.watch(watchlistProvider);
-  return watchlist.whenOrNull(
-        data: (items) => items.where((i) => i.isFavorite).length,
-      ) ??
-      0;
-});
-
-final planToWatchCountProvider = Provider<int>((ref) {
-  final watchlist = ref.watch(watchlistProvider);
-  return watchlist.whenOrNull(
-        data: (items) =>
-            items.where((i) => i.status == WatchlistStatus.planToWatch).length,
-      ) ??
-      0;
-});
-
-final stillWatchingCountProvider = Provider<int>((ref) {
-  final watchlist = ref.watch(watchlistProvider);
-  return watchlist.whenOrNull(
-        data: (items) => items
-            .where((i) => i.status == WatchlistStatus.stillWatching)
-            .length,
-      ) ??
-      0;
-});
-
-final watchedCountProvider = Provider<int>((ref) {
-  final watchlist = ref.watch(watchlistProvider);
-  return watchlist.whenOrNull(
-        data: (items) =>
-            items.where((i) => i.status == WatchlistStatus.watched).length,
-      ) ??
-      0;
-});

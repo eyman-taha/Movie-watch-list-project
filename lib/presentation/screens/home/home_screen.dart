@@ -274,7 +274,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
-            movies.length.clamp(0, 10),
+            movies.length,
             (index) => AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               width: _currentPage == index ? 24 : 8,
@@ -483,7 +483,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       isFavorite: isFav,
                       onToggleFavorite: (fav) async {
                         if (isFav) {
-                          await ref.read(watchlistProvider.notifier).removeFromWatchlist(movie.id);
+                          await ref.read(watchlistProvider.notifier).toggleFavorite(movie.id);
                         } else {
                           await ref.read(watchlistProvider.notifier).addToWatchlist(movie, isFavorite: true);
                         }

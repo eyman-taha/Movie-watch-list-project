@@ -61,7 +61,9 @@ class WatchlistItemModel extends WatchlistItem {
          userId: userId,
          movieId: movieId,
          movie: movie,
-         status: WatchlistStatus.values[statusIndex],
+         status: WatchlistStatus.values[
+           statusIndex.clamp(0, WatchlistStatus.values.length - 1)
+         ],
          userRating: userRating,
          isFavorite: isFavorite,
          addedAt: addedAt,

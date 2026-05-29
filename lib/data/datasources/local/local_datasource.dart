@@ -88,6 +88,7 @@ abstract class WatchlistLocalDataSource {
   Future<void> removeItem(int movieId);
   Future<bool> isInWatchlist(int movieId);
   Future<List<WatchlistItemModel>> getItemsByStatus(int statusIndex);
+  Future<void> setAllItems(List<Map<String, dynamic>> items);
   Future<void> clearAll();
 }
 
@@ -134,6 +135,17 @@ class WatchlistLocalDataSourceImpl implements WatchlistLocalDataSource {
     return _watchlistBox.values
         .where((WatchlistItemModel item) => item.statusIndex == statusIndex)
         .toList();
+  }
+
+  @override
+  Future<void> setAllItems(List<Map<String, dynamic>> items) async {
+    final map = <int, WatchlistItemModel>{};
+    for (final item in items) {
+      final model = _mapToModel(item);
+      map[model.movieId] = model;
+    }
+    await _watchlistBox.clear();
+    await _watchlistBox.putAll(map);
   }
 
   @override

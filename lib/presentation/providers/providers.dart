@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../../core/network/network_client.dart';
 import '../../data/datasources/local/local_datasource.dart';
 import '../../data/datasources/remote/movie_remote_datasource.dart';

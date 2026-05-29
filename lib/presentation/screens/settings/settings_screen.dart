@@ -1,10 +1,10 @@
-import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../providers/auth_providers.dart';
 import '../../providers/settings_providers.dart';
 import '../../providers/providers.dart';
 
@@ -17,6 +17,19 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _notificationsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationPref();
+  }
+
+  Future<void> _loadNotificationPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,10 +69,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             subtitle: 'Receive updates about new movies',
             trailing: Switch.adaptive(
               value: _notificationsEnabled,
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() {
                   _notificationsEnabled = value;
                 });
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('notifications_enabled', value);
               },
               activeTrackColor: AppTheme.primaryColor,
             ),
@@ -110,14 +125,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: 'Privacy Policy',
             subtitle: 'Learn how we handle your data',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => html.window.open('https://cinewatch.app/privacy', '_blank'),
+            onTap: () => launchUrl(Uri.parse('https://github.com/eyman-taha/Movie-watch-list-project/blob/main/PRIVACY.md'), mode: LaunchMode.externalApplication),
           ),
           _buildSettingsTile(
             icon: Icons.description_outlined,
             title: 'Terms of Service',
             subtitle: 'Read our terms',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => html.window.open('https://cinewatch.app/terms', '_blank'),
+            onTap: () => launchUrl(Uri.parse('https://github.com/eyman-taha/Movie-watch-list-project/blob/main/TERMS.md'), mode: LaunchMode.externalApplication),
           ),
           _buildSettingsTile(
             icon: Icons.code_outlined,
@@ -137,14 +152,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: 'Help & FAQ',
             subtitle: 'Get answers to common questions',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => html.window.open('https://github.com/eyman-taha/Movie-watch-list-project/issues', '_blank'),
+            onTap: () => launchUrl(Uri.parse('https://github.com/eyman-taha/Movie-watch-list-project/issues'), mode: LaunchMode.externalApplication),
           ),
           _buildSettingsTile(
             icon: Icons.feedback_outlined,
             title: 'Send Feedback',
             subtitle: 'Help us improve the app',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => html.window.open('https://github.com/eyman-taha/Movie-watch-list-project/issues/new', '_blank'),
+            onTap: () => launchUrl(Uri.parse('https://github.com/eyman-taha/Movie-watch-list-project/issues/new'), mode: LaunchMode.externalApplication),
           ),
           const SizedBox(height: 32),
           _buildSignOutButton(),

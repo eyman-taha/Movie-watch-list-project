@@ -6,8 +6,10 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import '../../../domain/entities/movie.dart';
 import '../../../domain/entities/genre.dart';
+import '../../../domain/entities/watchlist_item.dart';
 import '../../providers/providers.dart';
 import '../../providers/movie_providers.dart';
+import '../../providers/watchlist_providers.dart';
 import '../../widgets/movie_card/movie_card.dart';
 import '../../widgets/shimmer/shimmer_widgets.dart';
 
@@ -296,11 +298,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             columnCount: 2,
             child: ScaleAnimation(
               child: FadeInAnimation(
-                child: MovieCard(
-                  movie: movies[index],
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
+                child: _SearchMovieCard(movie: movies[index]),
               ),
             ),
           );
@@ -329,6 +327,39 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SearchMovieCard extends ConsumerWidget {
+  final Movie movie;
+
+  const _SearchMovieCard({required this.movie});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final watchlistAsync = ref.watch(watchlistProvider);
+    final favoriteIds = watchlistAsync.whenOrNull(
+          data: (items) => items
+              .where((WatchlistItem i) => i.isFavorite)
+              .map((WatchlistItem i) => i.movieId)
+              .toSet(),
+        ) ??
+        <int>{};
+    final isFav = favoriteIds.contains(movie.id);
+
+    return MovieCard(
+      movie: movie,
+      width: double.infinity,
+      height: double.infinity,
+      isFavorite: isFav,
+      onToggleFavorite: (fav) async {
+        if (isFav) {
+          await ref.read(watchlistProvider.notifier).toggleFavorite(movie.id);
+        } else {
+          await ref.read(watchlistProvider.notifier).addToWatchlist(movie, isFavorite: true);
+        }
+      },
     );
   }
 }

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import 'core/theme/app_theme.dart';
 import 'presentation/providers/providers.dart';
@@ -166,8 +165,10 @@ GoRouter createRouter(Ref ref) {
   );
 }
 
-final routerProvider = Provider<GoRouter>((ref) {
-  return createRouter(ref);
+final routerProvider = Provider.autoDispose<GoRouter>((ref) {
+  final router = createRouter(ref);
+  ref.onDispose(() => router.dispose());
+  return router;
 });
 
 class CineWatchApp extends ConsumerWidget {

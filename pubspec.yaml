@@ -30,14 +30,10 @@ dependencies:
   
   # Animations
   flutter_staggered_animations: ^1.1.1
-  flutter_animate: ^4.5.0
   shimmer: ^3.0.0
   
   # URL Launcher
   url_launcher: ^6.2.4
-  
-  # Connectivity
-  connectivity_plus: ^6.0.3
   
   # Shared Preferences
   shared_preferences: ^2.2.2
