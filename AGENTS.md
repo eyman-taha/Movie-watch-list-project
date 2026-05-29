@@ -186,6 +186,48 @@ flutter run
 | `lib/main.dart` | Firebase init, localization, notifications, deep links, routes |
 | `pubspec.yaml` | New deps + flutter_localizations + generate: true |
 
+### 10. Runtime Bug Fixes 🐛
+- Fixed Hero tag conflict: Removed `Hero` from `MovieCard` widget to prevent "multiple heroes share same tag" error when same movie appears in multiple home screen lists
+- Fixed trending carousel Hero tag from `'trending_${movie.id}'` to `'movie_poster_${movie.id}'` to match details screen — preserves hero transition from carousel → details
+- Added `mainAxisSize: MainAxisSize.min` to home screen carousel Positioned Column to prevent RenderFlex overflow (bottom overflowed by 49px)
+
+### 11. Profile Screen Redesign (Session: May 29, 2026) 🎬
+
+#### Complete Profile Overhaul
+- **Rebuilt from scratch**: Converted `ConsumerWidget` → `ConsumerStatefulWidget` to support local animation state and SharedPreferences for notification toggle
+- **Theme-aware architecture**: Removed ALL hardcoded `AppTheme.darkBackground`/`AppTheme.darkCard` references — replaced with `Theme.of(context)`. Light mode now renders correctly with proper contrast, readable text, adaptive cards, and visible borders.
+- **Cinematic header**: Gradient background with primary color fade, avatar with glow + ring, edit icon overlay, display name + email, "Member" badge
+- **Stats section**: 2×2 grid with animated counters (`AnimatedSwitcher`), theme-adaptive card with subtle depth, section header with icon
+- **Quick actions**: Discover / Watchlist / Home buttons with `InkWell` press feedback, outline borders, semantic colors
+- **Settings groups**: Structured sections with group headers (Account, Appearance, Notifications, Support, About) — each in a card container with proper dividers and spacing
+- **Danger zone**: Sign Out + Delete Account in a grouped red-tinted container, visually separated from main settings
+- **Micro-interactions**: `AnimatedContainer` for stat items, `AnimatedSwitcher` for stat values, `InkWell` splash/highlight on all tappable tiles, scale feedback
+
+#### Settings Added to Profile
+- Language selection (EN ↔ AR with checkmark indicator)
+- Push Notifications toggle (with SharedPreferences persistence)
+- Help & FAQ → URL launch
+- Send Feedback → URL launch
+- Privacy Policy → URL launch
+- Terms of Service → URL launch
+- Clear Cache → confirmation dialog
+- Open Source Licenses → `showLicensePage`
+
+#### Dark/Light Mode Fixes
+| Before | After |
+|--------|-------|
+| `AppTheme.darkBackground` hardcoded on scaffold | `Scaffold` with no `backgroundColor` — inherits from `Theme` |
+| `AppTheme.darkCard` for all card surfaces | `theme.cardColor` — adapts to light (#FFFFFF) or dark (#252525) |
+| `Colors.grey[400]` for subtitles | `theme.colorScheme.onSurface.withOpacity(0.45)` — proper contrast in both modes |
+| `Colors.white.withOpacity(0.05)` for card borders | `isDark ? white(0.06) : black(0.08)` — visible in both modes |
+| Bottom sheets used `AppTheme.darkSurface` | `theme.colorScheme.surface` — white in light, #1A1A1A in dark |
+| No shadows in dark mode (irrelevant) | Light mode adds subtle `BoxShadow` to cards for depth |
+
+### Modified Files
+| File | Change |
+|------|--------|
+| `lib/presentation/screens/settings/profile_screen.dart` | Complete rewrite — ConsumerStatefulWidget, theme-aware, 7 settings groups, micro-interactions, premium header |
+
 ## Testing Checklist
 - [x] Firebase authentication (login/register/logout)
 - [x] Watchlist persistence (add/remove/update status)

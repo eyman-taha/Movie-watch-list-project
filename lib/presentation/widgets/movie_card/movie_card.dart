@@ -51,18 +51,15 @@ class MovieCard extends ConsumerWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Hero(
-                tag: 'movie_poster_${movie.id}',
-                child: movie.posterPath != null
-                    ? CachedNetworkImage(
-                        imageUrl: ApiConstants.posterUrl(movie.posterPath),
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => _buildPlaceholder(),
-                        errorWidget: (context, url, error) =>
-                            _buildErrorWidget(),
-                      )
-                    : _buildErrorWidget(),
-              ),
+              movie.posterPath != null
+                  ? CachedNetworkImage(
+                      imageUrl: ApiConstants.posterUrl(movie.posterPath),
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => _buildPlaceholder(),
+                      errorWidget: (context, url, error) =>
+                          _buildErrorWidget(),
+                    )
+                  : _buildErrorWidget(),
               if (showRating)
                 Positioned(
                   top: 8,

@@ -308,7 +308,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: GestureDetector(
               onTap: () => context.push('/movie/${movie.id}'),
               child: Hero(
-                tag: 'trending_${movie.id}',
+                tag: 'movie_poster_${movie.id}',
                 child: Container(
                   height: 400,
                   margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -362,6 +362,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           left: 24,
                           right: 24,
                           child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
