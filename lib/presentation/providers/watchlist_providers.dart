@@ -9,19 +9,30 @@ final watchlistProvider =
       ref,
     ) {
       final repository = ref.watch(watchlistRepositoryProvider);
-      return WatchlistNotifier(repository);
+      final user = ref.watch(currentUserProvider);
+      return WatchlistNotifier(repository, user?.id);
     });
 
 class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
   final WatchlistRepository _repository;
+  final String? _userId;
 
-  WatchlistNotifier(this._repository) : super(const AsyncValue.loading()) {
+  WatchlistNotifier(this._repository, this._userId)
+    : super(const AsyncValue.loading()) {
+    _setUser();
     _load();
+  }
+
+  void _setUser() {
+    if (_userId != null) {
+      (_repository as dynamic).setCurrentUser(_userId);
+    }
   }
 
   Future<void> _load() async {
     state = const AsyncValue.loading();
     try {
+      _setUser();
       final items = await _repository.getAllItems();
       state = AsyncValue.data(items);
     } catch (e, st) {
@@ -35,9 +46,10 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
     bool isFavorite = false,
     String? userId,
   }) async {
+    final effectiveUserId = userId ?? _userId;
     final now = DateTime.now();
     final item = WatchlistItem(
-      userId: userId,
+      userId: effectiveUserId,
       movieId: movie.id,
       movie: movie,
       status: status,

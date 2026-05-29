@@ -2,18 +2,47 @@ import '../../domain/entities/watchlist_item.dart';
 import '../../domain/entities/movie.dart';
 import '../../domain/repositories/watchlist_repository.dart';
 import '../datasources/local/local_datasource.dart';
+import '../datasources/remote/watchlist_remote_datasource.dart';
 import '../models/watchlist_item_model.dart';
+import '../models/movie_model.dart';
 
 class WatchlistRepositoryImpl implements WatchlistRepository {
   final WatchlistLocalDataSource _localDataSource;
+  final WatchlistRemoteDataSource? _remoteDataSource;
+  String? _currentUserId;
+  String? _lastError;
 
-  WatchlistRepositoryImpl({required WatchlistLocalDataSource localDataSource})
-    : _localDataSource = localDataSource;
+  WatchlistRepositoryImpl({
+    required WatchlistLocalDataSource localDataSource,
+    WatchlistRemoteDataSource? remoteDataSource,
+  }) : _localDataSource = localDataSource,
+       _remoteDataSource = remoteDataSource;
+
+  void setCurrentUser(String? userId) {
+    _currentUserId = userId;
+  }
+
+  String? get lastError => _lastError;
 
   @override
   Future<List<WatchlistItem>> getAllItems() async {
+    if (_currentUserId != null && _remoteDataSource != null) {
+      try {
+        final remoteModels = await _remoteDataSource!.getUserWatchlist(
+          _currentUserId!,
+        );
+        if (remoteModels.isNotEmpty) {
+          for (final model in remoteModels) {
+            await _localDataSource.addItem(_toMap(model));
+          }
+          return remoteModels.map((m) => _toEntity(m)).toList();
+        }
+      } catch (e) {
+        _lastError = 'Firebase sync failed, using local data';
+      }
+    }
     final models = await _localDataSource.getAllItems();
-    return models.map<WatchlistItem>((m) => _toEntity(m)).toList();
+    return models.map((m) => _toEntity(m)).toList();
   }
 
   @override
@@ -24,17 +53,40 @@ class WatchlistRepositoryImpl implements WatchlistRepository {
 
   @override
   Future<void> addItem(WatchlistItem item) async {
-    await _localDataSource.addItem(_toModel(item));
+    final model = WatchlistItemModel.fromEntity(item);
+    await _localDataSource.addItem(_toMap(model));
+    if (_currentUserId != null && _remoteDataSource != null) {
+      try {
+        await _remoteDataSource!.addToWatchlist(_currentUserId!, model);
+      } catch (e) {
+        _lastError = 'Failed to sync to cloud';
+      }
+    }
   }
 
   @override
   Future<void> updateItem(WatchlistItem item) async {
-    await _localDataSource.updateItem(_toModel(item));
+    final model = WatchlistItemModel.fromEntity(item);
+    await _localDataSource.updateItem(_toMap(model));
+    if (_currentUserId != null && _remoteDataSource != null) {
+      try {
+        await _remoteDataSource!.updateWatchlistItem(_currentUserId!, model);
+      } catch (e) {
+        _lastError = 'Failed to sync update to cloud';
+      }
+    }
   }
 
   @override
   Future<void> removeItem(int movieId) async {
     await _localDataSource.removeItem(movieId);
+    if (_currentUserId != null && _remoteDataSource != null) {
+      try {
+        await _remoteDataSource!.removeFromWatchlist(_currentUserId!, movieId);
+      } catch (e) {
+        _lastError = 'Failed to sync removal to cloud';
+      }
+    }
   }
 
   @override
@@ -45,12 +97,27 @@ class WatchlistRepositoryImpl implements WatchlistRepository {
   @override
   Future<List<WatchlistItem>> getItemsByStatus(WatchlistStatus status) async {
     final models = await _localDataSource.getItemsByStatus(status.index);
-    return models.map<WatchlistItem>((m) => _toEntity(m)).toList();
+    return models.map((m) => _toEntity(m)).toList();
   }
 
   @override
   Future<void> clearAll() async {
     await _localDataSource.clearAll();
+    if (_currentUserId != null && _remoteDataSource != null) {
+      try {
+        final remoteModels = await _remoteDataSource!.getUserWatchlist(
+          _currentUserId!,
+        );
+        for (final model in remoteModels) {
+          await _remoteDataSource!.removeFromWatchlist(
+            _currentUserId!,
+            model.movieId,
+          );
+        }
+      } catch (e) {
+        _lastError = 'Failed to clear cloud data';
+      }
+    }
   }
 
   WatchlistItem _toEntity(WatchlistItemModel model) {
@@ -83,32 +150,33 @@ class WatchlistRepositoryImpl implements WatchlistRepository {
     );
   }
 
-  Map<String, dynamic> _toModel(WatchlistItem item) {
+  Map<String, dynamic> _toMap(WatchlistItemModel model) {
+    final m = model.movie;
     return {
-      'userId': item.userId,
-      'movieId': item.movieId,
+      'userId': model.userId,
+      'movieId': model.movieId,
       'movie': {
-        'id': item.movie.id,
-        'title': item.movie.title,
-        'originalTitle': item.movie.originalTitle,
-        'overview': item.movie.overview,
-        'posterPath': item.movie.posterPath,
-        'backdropPath': item.movie.backdropPath,
-        'releaseDate': item.movie.releaseDate,
-        'voteAverage': item.movie.voteAverage,
-        'voteCount': item.movie.voteCount,
-        'popularity': item.movie.popularity,
-        'genreIds': item.movie.genreIds,
-        'adult': item.movie.adult,
-        'originalLanguage': item.movie.originalLanguage,
+        'id': m.id,
+        'title': m.title,
+        'originalTitle': m.originalTitle,
+        'overview': m.overview,
+        'posterPath': m.posterPath,
+        'backdropPath': m.backdropPath,
+        'releaseDate': m.releaseDate,
+        'voteAverage': m.voteAverage,
+        'voteCount': m.voteCount,
+        'popularity': m.popularity,
+        'genreIds': m.genreIds,
+        'adult': m.adult,
+        'originalLanguage': m.originalLanguage,
       },
-      'statusIndex': item.status.index,
-      'userRating': item.userRating,
-      'isFavorite': item.isFavorite,
-      'addedAt': item.addedAt.toIso8601String(),
-      'updatedAt': item.updatedAt.toIso8601String(),
-      'watchedAt': item.watchedAt?.toIso8601String(),
-      'note': item.note,
+      'statusIndex': model.statusIndex,
+      'userRating': model.userRating,
+      'isFavorite': model.isFavorite,
+      'addedAt': model.addedAt.toIso8601String(),
+      'updatedAt': model.updatedAt.toIso8601String(),
+      'watchedAt': model.watchedAt?.toIso8601String(),
+      'note': model.note,
     };
   }
 }

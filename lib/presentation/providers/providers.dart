@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../core/network/network_client.dart';
 import '../../data/datasources/local/local_datasource.dart';
 import '../../data/datasources/remote/movie_remote_datasource.dart';
+import '../../data/datasources/remote/watchlist_remote_datasource.dart';
 import '../../data/models/movie_model.dart';
 import '../../data/models/watchlist_item_model.dart';
 import '../../data/models/genre_model.dart';
@@ -17,6 +19,10 @@ export 'auth_providers.dart';
 
 final networkClientProvider = Provider<NetworkClient>((ref) {
   return NetworkClient();
+});
+
+final firebaseFirestoreProvider = Provider<FirebaseFirestore>((ref) {
+  return FirebaseFirestore.instance;
 });
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
@@ -53,9 +59,18 @@ final movieRepositoryProvider = Provider<MovieRepository>((ref) {
   );
 });
 
+final watchlistRemoteDataSourceProvider = Provider<WatchlistRemoteDataSource>((ref) {
+  final firestore = ref.watch(firebaseFirestoreProvider);
+  return WatchlistRemoteDataSourceImpl(firestore: firestore);
+});
+
 final watchlistRepositoryProvider = Provider<WatchlistRepository>((ref) {
   final localDataSource = ref.watch(watchlistLocalDataSourceProvider);
-  return WatchlistRepositoryImpl(localDataSource: localDataSource);
+  final remoteDataSource = ref.watch(watchlistRemoteDataSourceProvider);
+  return WatchlistRepositoryImpl(
+    localDataSource: localDataSource,
+    remoteDataSource: remoteDataSource,
+  );
 });
 
 class HiveBoxes {

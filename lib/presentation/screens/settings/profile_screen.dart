@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../domain/entities/watchlist_item.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/watchlist_providers.dart';
+import '../../providers/settings_providers.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -50,11 +51,13 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   _buildListTile(
                     context: context,
-                    icon: Icons.notifications_outlined,
-                    title: 'Notifications',
+                    icon: Icons.dark_mode,
+                    title: 'Dark Mode',
                     trailing: Switch(
-                      value: true,
-                      onChanged: (value) {},
+                      value: ref.watch(themeModeProvider) == ThemeMode.dark,
+                      onChanged: (value) {
+                        ref.read(themeModeProvider.notifier).toggleTheme();
+                      },
                       activeTrackColor: AppTheme.primaryColor,
                     ),
                   ),
