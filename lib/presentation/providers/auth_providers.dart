@@ -187,7 +187,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } on FirebaseAuthException catch (e) {
       String message;
       if (e.code == 'requires-recent-login') {
-        message = 'Please sign out and sign back in before deleting your account';
+        message = 'Please re-authenticate before deleting your account';
       } else {
         message = e.message ?? 'Failed to delete account';
       }

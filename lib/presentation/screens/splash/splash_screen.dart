@@ -48,6 +48,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       if (!mounted) return;
       final prefs = await SharedPreferences.getInstance();
       final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+
+      if (!mounted) return;
+
       if (!onboardingCompleted) {
         context.go('/onboarding');
         return;
