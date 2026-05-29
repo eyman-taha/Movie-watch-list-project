@@ -42,8 +42,7 @@ class WatchlistRemoteDataSourceImpl implements WatchlistRemoteDataSource {
           note: data['note'] as String?,
         );
       }).toList();
-    } catch (e) {
-      print('getUserWatchlist error: $e'); // ignore: avoid_print
+    } catch (_) {
       return [];
     }
   }

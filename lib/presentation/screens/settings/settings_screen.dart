@@ -236,17 +236,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showLanguageDialog() {
+    final currentLocale = ref.read(localeProvider);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Language'),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(title: Text('English'), leading: Icon(Icons.check), selected: true),
-            ListTile(title: Text('Spanish'), leading: Icon(Icons.add), enabled: false),
-            ListTile(title: Text('French'), leading: Icon(Icons.add), enabled: false),
-            ListTile(title: Text('Arabic'), leading: Icon(Icons.add), enabled: false),
+            ListTile(
+              title: const Text('English'),
+              leading: Icon(
+                currentLocale.languageCode == 'en' ? Icons.check : Icons.add,
+              ),
+              selected: currentLocale.languageCode == 'en',
+              onTap: () {
+                ref.read(localeProvider.notifier).setLocale('en');
+                Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              title: const Text('العربية'),
+              leading: Icon(
+                currentLocale.languageCode == 'ar' ? Icons.check : Icons.add,
+              ),
+              selected: currentLocale.languageCode == 'ar',
+              onTap: () {
+                ref.read(localeProvider.notifier).setLocale('ar');
+                Navigator.pop(ctx);
+              },
+            ),
           ],
         ),
         actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],

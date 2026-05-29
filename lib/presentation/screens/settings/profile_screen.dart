@@ -27,6 +27,7 @@ class ProfileScreen extends ConsumerWidget {
             SliverToBoxAdapter(child: _buildQuickActions(context)),
             SliverToBoxAdapter(child: _buildSettingsSection(context, ref)),
             SliverToBoxAdapter(child: _buildSignOutButton(context, ref)),
+            SliverToBoxAdapter(child: _buildDeleteAccountButton(context, ref)),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
@@ -422,6 +423,35 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildDeleteAccountButton(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showDeleteAccountDialog(context, ref),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.red.withValues(alpha: 0.15)),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.delete_forever_outlined, color: Colors.red, size: 18),
+                SizedBox(width: 8),
+                Text('Delete Account', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500, fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showEditProfile(BuildContext context, WidgetRef ref) {
     final user = ref.read(currentUserProvider);
     final nameController = TextEditingController(text: user?.displayName ?? '');
@@ -542,6 +572,90 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 child: const Text('Close'),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(color: Colors.grey[600], borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: const Icon(Icons.delete_forever, size: 40, color: Colors.red),
+            ),
+            const SizedBox(height: 24),
+            const Text('Delete Account', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Text(
+              'This will permanently delete your account and all watchlist data. This action cannot be undone.',
+              style: TextStyle(color: Colors.grey[400]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      if (context.mounted) {
+                        await ref.read(watchlistProvider.notifier).refresh();
+                      }
+                      final success = await ref.read(authNotifierProvider.notifier).deleteAccount();
+                      if (context.mounted) {
+                        if (success) {
+                          context.go('/login');
+                        } else {
+                          final error = ref.read(authNotifierProvider).error;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(error ?? 'Failed to delete account'),
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Delete'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

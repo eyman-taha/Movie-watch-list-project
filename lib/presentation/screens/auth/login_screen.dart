@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../providers/auth_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -128,37 +129,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.movie_creation_rounded,
-                            size: 44,
-                            color: Colors.white,
-                          ),
+                        child: const Icon(
+                          Icons.movie_creation_rounded,
+                          size: 44,
+                          color: Colors.white,
                         ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'CineWatch',
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                                blurRadius: 16,
-                              ),
-                            ],
-                          ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        AppLocalizations.of(context)!.appName,
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                              blurRadius: 16,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Your Personal Movie Journal',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[500],
-                            letterSpacing: 0.5,
-                          ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        AppLocalizations.of(context)!.yourPersonalMovieJournal,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                          letterSpacing: 0.5,
                         ),
+                      ),
                       ],
                     ),
                   ),
@@ -193,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               keyboardType: TextInputType.emailAddress,
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
-                                labelText: 'Email',
+                                labelText: AppLocalizations.of(context)!.email,
                                 labelStyle: TextStyle(color: Colors.grey[400]),
                                 prefixIcon: Icon(
                                   Icons.email_outlined,
@@ -221,10 +222,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
+                                  return AppLocalizations.of(context)!.enterEmailValidation;
                                 }
                                 if (!value.contains('@')) {
-                                  return 'Please enter a valid email';
+                                  return AppLocalizations.of(context)!.validEmailValidation;
                                 }
                                 return null;
                               },
@@ -235,7 +236,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               obscureText: _obscurePassword,
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
-                                labelText: 'Password',
+                                labelText: AppLocalizations.of(context)!.password,
                                 labelStyle: TextStyle(color: Colors.grey[400]),
                                 prefixIcon: Icon(
                                   Icons.lock_outlined,
@@ -276,10 +277,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter your password';
+                                  return AppLocalizations.of(context)!.enterPasswordValidation;
                                 }
                                 if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
+                                  return AppLocalizations.of(context)!.minPasswordValidation;
                                 }
                                 return null;
                               },
@@ -288,31 +289,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: () async {
-                                  final email = _emailController.text.trim();
-                                  if (email.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Enter your email first'),
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  final success = await ref.read(authNotifierProvider.notifier).resetPassword(email);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(success ? 'Password reset email sent' : 'Failed to send reset email'),
-                                        backgroundColor: success ? Colors.green : Colors.red,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  }
-                                },
+                                onPressed: () => context.push('/forgot-password'),
                                 style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8)),
                                 child: Text(
-                                  'Forgot Password?',
+                                  AppLocalizations.of(context)!.forgotPassword,
                                   style: TextStyle(
                                     color: AppTheme.primaryColor,
                                     fontSize: 13,
@@ -346,9 +326,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text(
-                                        'Sign In',
-                                        style: TextStyle(
+                                    : Text(
+                                        AppLocalizations.of(context)!.signIn,
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                           letterSpacing: 0.5,
@@ -379,7 +359,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'OR',
+                            AppLocalizations.of(context)!.or,
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 12,
@@ -414,7 +394,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account? ",
+                          AppLocalizations.of(context)!.dontHaveAccount,
                           style: TextStyle(color: Colors.grey[500], fontSize: 14),
                         ),
                         TextButton(
@@ -423,9 +403,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                           ),
                           child: Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              color: const Color(0xFFE50914),
+                            AppLocalizations.of(context)!.signUp,
+                            style: const TextStyle(
+                              color: Color(0xFFE50914),
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),

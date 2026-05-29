@@ -173,6 +173,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState.initial();
   }
 
+  Future<bool> deleteAccount() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        state = state.copyWith(isLoading: false, error: 'No user logged in');
+        return false;
+      }
+      await user.delete();
+      state = AuthState.initial();
+      return true;
+    } on FirebaseAuthException catch (e) {
+      String message;
+      if (e.code == 'requires-recent-login') {
+        message = 'Please sign out and sign back in before deleting your account';
+      } else {
+        message = e.message ?? 'Failed to delete account';
+      }
+      state = state.copyWith(isLoading: false, error: message);
+      return false;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
   Future<void> updateProfile({String? displayName, String? photoUrl}) async {
     try {
       final user = _auth.currentUser;

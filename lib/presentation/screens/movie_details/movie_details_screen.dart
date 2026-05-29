@@ -2,7 +2,7 @@ import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/theme/app_theme.dart';
@@ -756,24 +756,21 @@ class MovieDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _openTrailer(BuildContext context, MovieDetails movie) async {
+  void _openTrailer(BuildContext context, MovieDetails movie) {
     final trailer = movie.trailer;
-    if (trailer != null && trailer.isYouTube) {
-      final url = 'https://www.youtube.com/watch?v=${trailer.key}';
-      try {
-        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      } catch (_) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not open trailer')),
-          );
-        }
-      }
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('No trailer available')));
+    if (trailer == null || !trailer.isYouTube) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No trailer available')),
+      );
+      return;
     }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => _TrailerBottomSheet(trailerKey: trailer.key),
+    );
   }
 
   Widget _buildCastSection(List<dynamic> cast) {
@@ -857,6 +854,96 @@ class MovieDetailsScreen extends ConsumerWidget {
     if (rating >= 7.0) return Colors.green;
     if (rating >= 5.0) return Colors.orange;
     return Colors.red;
+  }
+}
+
+class _TrailerBottomSheet extends StatefulWidget {
+  final String trailerKey;
+
+  const _TrailerBottomSheet({required this.trailerKey});
+
+  @override
+  State<_TrailerBottomSheet> createState() => _TrailerBottomSheetState();
+}
+
+class _TrailerBottomSheetState extends State<_TrailerBottomSheet> {
+  late YoutubePlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = YoutubePlayerController(
+      initialVideoId: widget.trailerKey,
+      flags: const YoutubePlayerFlags(
+        autoPlay: true,
+        mute: false,
+        controlsVisibleAtStart: true,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[600],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Trailer',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: YoutubePlayer(
+              controller: _controller,
+              showVideoProgressIndicator: true,
+              progressIndicatorColor: const Color(0xFFE50914),
+              progressColors: const ProgressBarColors(
+                playedColor: Color(0xFFE50914),
+                handleColor: Color(0xFFE50914),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
   }
 }
 

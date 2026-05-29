@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
+import 'l10n/app_localizations.dart';
+
+import 'core/notifications/notification_service.dart';
+import 'core/routing/deep_links.dart';
 import 'core/theme/app_theme.dart';
+import 'firebase_options.dart';
 import 'presentation/providers/providers.dart';
 import 'presentation/providers/settings_providers.dart';
 import 'presentation/screens/splash/splash_screen.dart';
+import 'presentation/screens/onboarding/onboarding_screen.dart';
+import 'presentation/screens/auth/forgot_password_screen.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/register_screen.dart';
 import 'presentation/screens/home/home_screen.dart';
@@ -20,17 +29,11 @@ import 'presentation/screens/movie_details/movie_details_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase for both Android and Web
   await Firebase.initializeApp(
-    options: FirebaseOptions(
-      apiKey: "AIzaSyC8QTF7t3pve7zBgs_t5cXMswsF9h9bmbU",
-      authDomain: "movie-watch-list-d2665.firebaseapp.com",
-      projectId: "movie-watch-list-d2665",
-      storageBucket: "movie-watch-list-d2665.firebasestorage.app",
-      messagingSenderId: "7372161177",
-      appId: "1:7372161177:web:d76be5c0722c4467f7f808",
-    ),
+    options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await NotificationService().initialize();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -56,28 +59,36 @@ GoRouter createRouter(Ref ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
-    debugLogDiagnostics: true,
     redirect: (context, state) {
       final authState = ref.watch(authStateProvider);
       final isLoggedIn = authState.user != null;
-      final isLoggingIn =
+      final isPublicRoute =
           state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register';
+          state.matchedLocation == '/register' ||
+          state.matchedLocation == '/onboarding';
 
-      if (!isLoggedIn && !isLoggingIn && state.matchedLocation != '/') {
+      if (!isLoggedIn && !isPublicRoute && state.matchedLocation != '/') {
         return '/login';
       }
-      if (isLoggedIn && isLoggingIn) {
+      if (isLoggedIn && (state.matchedLocation == '/login' || state.matchedLocation == '/register')) {
         return '/home';
       }
       return null;
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
@@ -171,13 +182,43 @@ final routerProvider = Provider.autoDispose<GoRouter>((ref) {
   return router;
 });
 
-class CineWatchApp extends ConsumerWidget {
+class CineWatchApp extends ConsumerStatefulWidget {
   const CineWatchApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CineWatchApp> createState() => _CineWatchAppState();
+}
+
+class _CineWatchAppState extends ConsumerState<CineWatchApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initNotifications();
+    });
+  }
+
+  void _initNotifications() {
+    final context = _rootNavigatorKey.currentContext;
+    if (context == null) return;
+
+    final deepLinkHandler = DeepLinkHandler();
+    deepLinkHandler.initialize(_rootNavigatorKey);
+
+    NotificationService.handleNotificationOpenedApp(context, ref);
+
+    FirebaseMessaging.onMessage.listen((message) {
+      if (context.mounted) {
+        NotificationService.handleForegroundMessage(context, ref, message);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       title: 'CineWatch',
@@ -185,6 +226,14 @@ class CineWatchApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      locale: locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,
     );
   }

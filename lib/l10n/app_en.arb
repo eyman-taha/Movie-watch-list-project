@@ -1,0 +1,679 @@
+{
+  "@@locale": "en",
+  "appName": "CineWatch",
+  "@appName": {
+    "description": "The name of the application"
+  },
+  "appTagline": "Discover • Watch • Track",
+  "@appTagline": {
+    "description": "Tagline shown on splash screen"
+  },
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+  "enterEmailValidation": "Please enter your email",
+  "@enterEmailValidation": {
+    "description": "Validation message when email is empty"
+  },
+  "validEmailValidation": "Please enter a valid email",
+  "@validEmailValidation": {
+    "description": "Validation message for invalid email format"
+  },
+  "enterPasswordValidation": "Please enter your password",
+  "@enterPasswordValidation": {
+    "description": "Validation message when password is empty"
+  },
+  "minPasswordValidation": "Password must be at least 6 characters",
+  "@minPasswordValidation": {
+    "description": "Validation message for short password"
+  },
+  "signIn": "Sign In",
+  "@signIn": {
+    "description": "Sign in button text"
+  },
+  "signUp": "Sign Up",
+  "@signUp": {
+    "description": "Sign up button text"
+  },
+  "signOut": "Sign Out",
+  "@signOut": {
+    "description": "Sign out button text"
+  },
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Forgot password link text"
+  },
+  "or": "OR",
+  "@or": {
+    "description": "Divider text between sign in options"
+  },
+  "dontHaveAccount": "Don't have an account?",
+  "@dontHaveAccount": {
+    "description": "Text before sign up link"
+  },
+  "yourPersonalMovieJournal": "Your Personal Movie Journal",
+  "@yourPersonalMovieJournal": {
+    "description": "Subtitle on login screen"
+  },
+  "createAccount": "Create Account",
+  "@createAccount": {
+    "description": "Register screen title"
+  },
+  "fullName": "Full Name",
+  "@fullName": {
+    "description": "Full name field label"
+  },
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": {
+    "description": "Confirm password field label"
+  },
+  "passwordsDoNotMatch": "Passwords do not match",
+  "@passwordsDoNotMatch": {
+    "description": "Validation when passwords don't match"
+  },
+  "alreadyHaveAccount": "Already have an account?",
+  "@alreadyHaveAccount": {
+    "description": "Text before sign in link on register screen"
+  },
+  "home": "Home",
+  "@home": {
+    "description": "Home tab label"
+  },
+  "search": "Search",
+  "@search": {
+    "description": "Search tab label"
+  },
+  "watchlist": "Watchlist",
+  "@watchlist": {
+    "description": "Watchlist tab label"
+  },
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile tab label"
+  },
+  "trendingThisWeek": "Trending This Week",
+  "@trendingThisWeek": {
+    "description": "Trending movies section header"
+  },
+  "popularMovies": "Popular Movies",
+  "@popularMovies": {
+    "description": "Popular movies section header"
+  },
+  "topRated": "Top Rated",
+  "@topRated": {
+    "description": "Top rated movies section header"
+  },
+  "nowPlaying": "Now Playing",
+  "@nowPlaying": {
+    "description": "Now playing movies section header"
+  },
+  "upcoming": "Upcoming",
+  "@upcoming": {
+    "description": "Upcoming movies section header"
+  },
+  "seeAll": "See All",
+  "@seeAll": {
+    "description": "See all button text"
+  },
+  "noMoviesFound": "No movies found",
+  "@noMoviesFound": {
+    "description": "Empty state for movie lists"
+  },
+  "failedToLoadMovies": "Failed to load movies",
+  "@failedToLoadMovies": {
+    "description": "Error state for movie loading"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button text"
+  },
+  "myWatchlist": "My Watchlist",
+  "@myWatchlist": {
+    "description": "Watchlist screen title"
+  },
+  "all": "All",
+  "@all": {
+    "description": "Filter option for all items"
+  },
+  "planToWatch": "Plan to Watch",
+  "@planToWatch": {
+    "description": "Watchlist status label"
+  },
+  "stillWatching": "Watching",
+  "@stillWatching": {
+    "description": "Watchlist status label for in-progress"
+  },
+  "watched": "Watched",
+  "@watched": {
+    "description": "Watchlist status label for completed"
+  },
+  "yourStats": "Your Stats",
+  "@yourStats": {
+    "description": "Stats section header on profile"
+  },
+  "plan": "Plan",
+  "@plan": {
+    "description": "Short stat label for plan to watch"
+  },
+  "watching": "Watching",
+  "@watching": {
+    "description": "Short stat label for currently watching"
+  },
+  "favorites": "Favorites",
+  "@favorites": {
+    "description": "Favorites stat label"
+  },
+  "discover": "Discover",
+  "@discover": {
+    "description": "Quick action button"
+  },
+  "editProfile": "Edit Profile",
+  "@editProfile": {
+    "description": "Edit profile option"
+  },
+  "updateProfile": "Update your name and photo",
+  "@updateProfile": {
+    "description": "Edit profile subtitle"
+  },
+  "darkMode": "Dark Mode",
+  "@darkMode": {
+    "description": "Dark mode toggle label"
+  },
+  "enabled": "Enabled",
+  "@enabled": {
+    "description": "Toggle enabled state"
+  },
+  "disabled": "Disabled",
+  "@disabled": {
+    "description": "Toggle disabled state"
+  },
+  "about": "About",
+  "@about": {
+    "description": "About section"
+  },
+  "version": "Version 1.0.0",
+  "@version": {
+    "description": "App version"
+  },
+  "saveChanges": "Save Changes",
+  "@saveChanges": {
+    "description": "Save button for profile edit"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button"
+  },
+  "close": "Close",
+  "@close": {
+    "description": "Close button"
+  },
+  "profileUpdated": "Profile updated!",
+  "@profileUpdated": {
+    "description": "Success message after profile update"
+  },
+  "failedToUpdateProfile": "Failed to update profile",
+  "@failedToUpdateProfile": {
+    "description": "Error message for profile update failure"
+  },
+  "areYouSureSignOut": "Are you sure you want to sign out?",
+  "@areYouSureSignOut": {
+    "description": "Sign out confirmation message"
+  },
+  "deleteAccount": "Delete Account",
+  "@deleteAccount": {
+    "description": "Delete account button"
+  },
+  "deleteAccountWarning": "This will permanently delete your account and all watchlist data. This action cannot be undone.",
+  "@deleteAccountWarning": {
+    "description": "Delete account confirmation warning"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete confirmation button"
+  },
+  "movieLover": "Movie Lover",
+  "@movieLover": {
+    "description": "Default display name"
+  },
+  "welcomeToCineWatch": "Welcome to CineWatch",
+  "@welcomeToCineWatch": {
+    "description": "Welcome message on profile"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings screen title"
+  },
+  "appearance": "Appearance",
+  "@appearance": {
+    "description": "Appearance section header in settings"
+  },
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications section header"
+  },
+  "pushNotifications": "Push Notifications",
+  "@pushNotifications": {
+    "description": "Push notifications toggle label"
+  },
+  "receiveMovieUpdates": "Receive updates about new movies",
+  "@receiveMovieUpdates": {
+    "description": "Push notifications subtitle"
+  },
+  "emailNotifications": "Email Notifications",
+  "@emailNotifications": {
+    "description": "Email notifications option"
+  },
+  "weeklyDigest": "Weekly digest and recommendations",
+  "@weeklyDigest": {
+    "description": "Email notifications subtitle"
+  },
+  "comingSoon": "Coming soon",
+  "@comingSoon": {
+    "description": "Feature coming soon message"
+  },
+  "content": "Content",
+  "@content": {
+    "description": "Content section header"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Language option"
+  },
+  "english": "English",
+  "@english": {
+    "description": "English language label"
+  },
+  "arabic": "العربية",
+  "@arabic": {
+    "description": "Arabic language label"
+  },
+  "contentRating": "Content Rating",
+  "@contentRating": {
+    "description": "Content rating option"
+  },
+  "allAges": "All ages",
+  "@allAges": {
+    "description": "Content rating option value"
+  },
+  "storage": "Storage",
+  "@storage": {
+    "description": "Storage section header"
+  },
+  "clearCache": "Clear Cache",
+  "@clearCache": {
+    "description": "Clear cache option"
+  },
+  "freeUpStorage": "Free up storage space",
+  "@freeUpStorage": {
+    "description": "Clear cache subtitle"
+  },
+  "clearCacheConfirmation": "This will clear all cached data including movie images and search history. Your watchlist will not be affected.",
+  "@clearCacheConfirmation": {
+    "description": "Clear cache dialog message"
+  },
+  "clear": "Clear",
+  "@clear": {
+    "description": "Clear button"
+  },
+  "cacheCleared": "Cache cleared successfully",
+  "@cacheCleared": {
+    "description": "Success message after cache clear"
+  },
+  "aboutCineWatch": "About CineWatch",
+  "@aboutCineWatch": {
+    "description": "About app option"
+  },
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy option"
+  },
+  "learnHowWeHandleData": "Learn how we handle your data",
+  "@learnHowWeHandleData": {
+    "description": "Privacy policy subtitle"
+  },
+  "termsOfService": "Terms of Service",
+  "@termsOfService": {
+    "description": "Terms of service option"
+  },
+  "readOurTerms": "Read our terms",
+  "@readOurTerms": {
+    "description": "Terms of service subtitle"
+  },
+  "openSourceLicenses": "Open Source Licenses",
+  "@openSourceLicenses": {
+    "description": "Open source licenses option"
+  },
+  "thirdPartyLibraries": "Third-party libraries",
+  "@thirdPartyLibraries": {
+    "description": "Open source licenses subtitle"
+  },
+  "support": "Support",
+  "@support": {
+    "description": "Support section header"
+  },
+  "helpAndFaq": "Help & FAQ",
+  "@helpAndFaq": {
+    "description": "Help option"
+  },
+  "getAnswers": "Get answers to common questions",
+  "@getAnswers": {
+    "description": "Help subtitle"
+  },
+  "sendFeedback": "Send Feedback",
+  "@sendFeedback": {
+    "description": "Feedback option"
+  },
+  "helpUsImprove": "Help us improve the app",
+  "@helpUsImprove": {
+    "description": "Feedback subtitle"
+  },
+  "noUserFound": "No user found with this email",
+  "@noUserFound": {
+    "description": "Auth error message"
+  },
+  "wrongPassword": "Wrong password",
+  "@wrongPassword": {
+    "description": "Auth error message"
+  },
+  "invalidEmail": "Invalid email address",
+  "@invalidEmail": {
+    "description": "Auth error message"
+  },
+  "accountDisabled": "This account has been disabled",
+  "@accountDisabled": {
+    "description": "Auth error message"
+  },
+  "emailAlreadyRegistered": "This email is already registered",
+  "@emailAlreadyRegistered": {
+    "description": "Auth error message"
+  },
+  "weakPassword": "Password should be at least 6 characters",
+  "@weakPassword": {
+    "description": "Auth error message"
+  },
+  "anErrorOccurred": "An error occurred",
+  "@anErrorOccurred": {
+    "description": "Generic auth error"
+  },
+  "enterEmailFirst": "Enter your email first",
+  "@enterEmailFirst": {
+    "description": "Prompt to enter email before forgot password"
+  },
+  "passwordResetSent": "Password reset email sent",
+  "@passwordResetSent": {
+    "description": "Success message for password reset"
+  },
+  "failedToSendReset": "Failed to send reset email",
+  "@failedToSendReset": {
+    "description": "Error message for password reset"
+  },
+  "resetPassword": "Reset Password",
+  "@resetPassword": {
+    "description": "Reset password screen title"
+  },
+  "enterEmailForReset": "Enter your email to receive a reset link",
+  "@enterEmailForReset": {
+    "description": "Reset password instruction"
+  },
+  "checkInboxForReset": "Check your inbox for the reset link",
+  "@checkInboxForReset": {
+    "description": "After email sent message"
+  },
+  "sendResetLink": "Send Reset Link",
+  "@sendResetLink": {
+    "description": "Send reset link button"
+  },
+  "emailSent": "Email Sent!",
+  "@emailSent": {
+    "description": "Success header after sending email"
+  },
+  "checkEmailInstructions": "Check your email and follow the instructions to reset your password.",
+  "@checkEmailInstructions": {
+    "description": "Instructions after sending reset email"
+  },
+  "backToSignIn": "Back to Sign In",
+  "@backToSignIn": {
+    "description": "Back to sign in button"
+  },
+  "skip": "Skip",
+  "@skip": {
+    "description": "Skip onboarding button"
+  },
+  "next": "Next",
+  "@next": {
+    "description": "Next button"
+  },
+  "getStarted": "Get Started",
+  "@getStarted": {
+    "description": "Get started button"
+  },
+  "discoverMovies": "Discover Movies",
+  "@discoverMovies": {
+    "description": "Onboarding page 1 title"
+  },
+  "discoverMoviesDesc": "Browse trending, popular, and top-rated movies. Find your next favorite film.",
+  "@discoverMoviesDesc": {
+    "description": "Onboarding page 1 description"
+  },
+  "buildYourWatchlist": "Build Your Watchlist",
+  "@buildYourWatchlist": {
+    "description": "Onboarding page 2 title"
+  },
+  "buildYourWatchlistDesc": "Save movies to your watchlist, track your progress, and never lose track.",
+  "@buildYourWatchlistDesc": {
+    "description": "Onboarding page 2 description"
+  },
+  "stayUpdated": "Stay Updated",
+  "@stayUpdated": {
+    "description": "Onboarding page 3 title"
+  },
+  "stayUpdatedDesc": "Get notified about new releases and never miss a movie again.",
+  "@stayUpdatedDesc": {
+    "description": "Onboarding page 3 description"
+  },
+  "searchMovies": "Search movies...",
+  "@searchMovies": {
+    "description": "Search hint text"
+  },
+  "recentSearches": "Recent Searches",
+  "@recentSearches": {
+    "description": "Recent searches header"
+  },
+  "clearHistory": "Clear History",
+  "@clearHistory": {
+    "description": "Clear search history button"
+  },
+  "noRecentSearches": "No recent searches",
+  "@noRecentSearches": {
+    "description": "Empty search history"
+  },
+  "browseGenres": "Browse Genres",
+  "@browseGenres": {
+    "description": "Browse genres header"
+  },
+  "noResults": "No results found",
+  "@noResults": {
+    "description": "Empty search results"
+  },
+  "tryDifferentQuery": "Try a different search term",
+  "@tryDifferentQuery": {
+    "description": "Empty search results suggestion"
+  },
+  "addToWatchlist": "Add to Watchlist",
+  "@addToWatchlist": {
+    "description": "Add to watchlist button"
+  },
+  "inWatchlist": "In Watchlist",
+  "@inWatchlist": {
+    "description": "Already in watchlist indicator"
+  },
+  "overview": "Overview",
+  "@overview": {
+    "description": "Movie overview section"
+  },
+  "cast": "Cast",
+  "@cast": {
+    "description": "Cast section"
+  },
+  "similarMovies": "Similar Movies",
+  "@similarMovies": {
+    "description": "Similar movies section"
+  },
+  "watchTrailer": "Watch Trailer",
+  "@watchTrailer": {
+    "description": "Watch trailer button"
+  },
+  "noTrailerAvailable": "No trailer available",
+  "@noTrailerAvailable": {
+    "description": "No trailer message"
+  },
+  "couldNotOpenTrailer": "Could not open trailer",
+  "@couldNotOpenTrailer": {
+    "description": "Trailer error message"
+  },
+  "failedToLoadMovieDetails": "Failed to load movie details",
+  "@failedToLoadMovieDetails": {
+    "description": "Error message for movie details"
+  },
+  "displayName": "Display Name",
+  "@displayName": {
+    "description": "Display name field label in edit profile"
+  },
+  "sortBy": "Sort by",
+  "@sortBy": {
+    "description": "Sort button label"
+  },
+  "dateAdded": "Date Added",
+  "@dateAdded": {
+    "description": "Sort option"
+  },
+  "rating": "Rating",
+  "@rating": {
+    "description": "Sort option"
+  },
+  "title": "Title",
+  "@title": {
+    "description": "Sort option"
+  },
+  "newest": "Newest",
+  "@newest": {
+    "description": "Sort direction"
+  },
+  "oldest": "Oldest",
+  "@oldest": {
+    "description": "Sort direction"
+  },
+  "highest": "Highest",
+  "@highest": {
+    "description": "Sort direction"
+  },
+  "aToZ": "A-Z",
+  "@aToZ": {
+    "description": "Sort direction"
+  },
+  "noItemsInWatchlist": "No movies in your watchlist yet",
+  "@noItemsInWatchlist": {
+    "description": "Empty watchlist message"
+  },
+  "startExploring": "Start exploring and add movies!",
+  "@startExploring": {
+    "description": "Empty watchlist suggestion"
+  },
+  "removeFromWatchlist": "Remove from Watchlist",
+  "@removeFromWatchlist": {
+    "description": "Remove button tooltip"
+  },
+  "confirmRemove": "Are you sure you want to remove this movie?",
+  "@confirmRemove": {
+    "description": "Remove confirmation"
+  },
+  "remove": "Remove",
+  "@remove": {
+    "description": "Remove button"
+  },
+  "markAsWatched": "Mark as Watched",
+  "@markAsWatched": {
+    "description": "Mark as watched action"
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit action"
+  },
+  "movieDetails": "Movie Details",
+  "@movieDetails": {
+    "description": "Movie details link text"
+  },
+  "yourRating": "Your Rating",
+  "@yourRating": {
+    "description": "Rating section"
+  },
+  "tapToRate": "Tap to rate",
+  "@tapToRate": {
+    "description": "Rating hint"
+  },
+  "addNote": "Add Note",
+  "@addNote": {
+    "description": "Add note button"
+  },
+  "noteHint": "Write your thoughts...",
+  "@noteHint": {
+    "description": "Note input hint"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save button"
+  },
+  "noteSaved": "Note saved",
+  "@noteSaved": {
+    "description": "Note save confirmation"
+  },
+  "requiresRecentLogin": "Please sign out and sign back in before deleting your account",
+  "@requiresRecentLogin": {
+    "description": "Re-authentication required message"
+  },
+  "failedToDeleteAccount": "Failed to delete account",
+  "@failedToDeleteAccount": {
+    "description": "Account deletion error"
+  },
+  "noUserLoggedIn": "No user logged in",
+  "@noUserLoggedIn": {
+    "description": "No user error"
+  },
+  "allRightsReserved": "All rights reserved.",
+  "@allRightsReserved": {
+    "description": "Footer text"
+  },
+  "minutes": "min",
+  "@minutes": {
+    "description": "Minutes abbreviation"
+  },
+  "languageSetting": "Language",
+  "@languageSetting": {
+    "description": "Language setting title"
+  },
+  "notificationsEnabled": "Notifications Enabled",
+  "@notificationsEnabled": {
+    "description": "Notification toggle label"
+  },
+  "notificationsDisabled": "Notifications Disabled",
+  "@notificationsDisabled": {
+    "description": "Notification toggle label"
+  },
+  "notificationPermissionDenied": "Notification permission denied. You can enable it in your device settings.",
+  "@notificationPermissionDenied": {
+    "description": "Notification permission denied message"
+  },
+  "noAccount": "No account?",
+  "@noAccount": {
+    "description": "Register prompt text"
+  },
+  "haveAccount": "Have an account?",
+  "@haveAccount": {
+    "description": "Sign in prompt text"
+  }
+}

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../providers/auth_providers.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -42,7 +44,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () async {
+      if (!mounted) return;
+      final prefs = await SharedPreferences.getInstance();
+      final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+      if (!onboardingCompleted) {
+        context.go('/onboarding');
+        return;
+      }
       if (mounted) {
         final authState = ref.read(authStateProvider);
         if (authState.user != null) {
@@ -110,9 +119,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'CineWatch',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.appName,
+                  style: const TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -121,7 +130,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Discover • Watch • Track',
+                  AppLocalizations.of(context)!.appTagline,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.7),
