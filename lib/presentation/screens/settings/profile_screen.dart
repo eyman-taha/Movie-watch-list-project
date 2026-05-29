@@ -14,10 +14,12 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    final watchlistAsync = ref.watch(watchlistProvider);
+    final watchlist = ref.watch(watchlistProvider);
 
     return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
       body: SafeArea(
+<<<<<<< HEAD
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -92,12 +94,24 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 100),
             ],
           ),
+=======
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader(context, user)),
+            SliverToBoxAdapter(child: _buildStatsSection(watchlist)),
+            SliverToBoxAdapter(child: _buildQuickActions(context)),
+            SliverToBoxAdapter(child: _buildSettingsSection(context, ref)),
+            SliverToBoxAdapter(child: _buildSignOutButton(context, ref)),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
+>>>>>>> 9defcd7 (fix: convert all placeholder interactions to production-ready logic)
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, WidgetRef ref, User? user) {
+  Widget _buildHeader(BuildContext context, User? user) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -106,79 +120,22 @@ class ProfileScreen extends ConsumerWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            AppTheme.primaryColor.withValues(alpha: 0.2),
-            Colors.transparent,
+            AppTheme.primaryColor.withValues(alpha: 0.15),
+            AppTheme.darkBackground,
           ],
         ),
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.settings, size: 20),
-                ),
-                onPressed: () => context.push('/settings'),
-              ),
-            ],
-          ),
-          GestureDetector(
-            onTap: () => _showEditProfileDialog(context, ref, user),
-            child: Stack(
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: AppTheme.primaryColor,
-                  backgroundImage: user?.photoUrl != null
-                      ? NetworkImage(user!.photoUrl!)
-                      : null,
-                  child: user?.photoUrl == null
-                      ? Text(
-                          user?.displayName?.substring(0, 1).toUpperCase() ??
-                              user?.email.substring(0, 1).toUpperCase() ??
-                              'U',
-                          style: const TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        )
-                      : null,
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+          _buildAvatar(user),
+          const SizedBox(height: 20),
           Text(
-            user?.displayName ?? 'User',
+            user?.displayName ?? 'Movie Lover',
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Text(
-            user?.email ?? '',
+            user?.email ?? 'Welcome to CineWatch',
             style: TextStyle(fontSize: 14, color: Colors.grey[400]),
           ),
         ],
@@ -186,247 +143,651 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsSection(AsyncValue<List<WatchlistItem>> watchlist) {
-    return watchlist.when(
-      data: (List<WatchlistItem> items) {
-        final planToWatch = items
-            .where((WatchlistItem i) => i.status == WatchlistStatus.planToWatch)
-            .length;
-        final stillWatching = items
-            .where(
-              (WatchlistItem i) => i.status == WatchlistStatus.stillWatching,
-            )
-            .length;
-        final watched = items
-            .where((WatchlistItem i) => i.status == WatchlistStatus.watched)
-            .length;
-        final favorites = items.where((WatchlistItem i) => i.isFavorite).length;
+  Widget _buildAvatar(User? user) {
+    String initials = 'U';
+    if (user != null) {
+      if (user.displayName != null && user.displayName!.isNotEmpty) {
+        final parts = user.displayName!.split(' ');
+        if (parts.length > 1) {
+          initials = '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+        } else {
+          initials = user.displayName![0].toUpperCase();
+        }
+      } else if (user.email.isNotEmpty) {
+        initials = user.email[0].toUpperCase();
+      }
+    }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildStatCard(
-                'Plan to Watch',
-                planToWatch.toString(),
-                Colors.orange,
-              ),
-              _buildStatCard('Watching', stillWatching.toString(), Colors.blue),
-              _buildStatCard('Watched', watched.toString(), Colors.green),
-              _buildStatCard('Favorites', favorites.toString(), Colors.red),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: AppTheme.primaryColor, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
+            blurRadius: 20,
+            spreadRadius: 5,
           ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (e, s) => const SizedBox.shrink(),
+        ],
+      ),
+      child: CircleAvatar(
+        radius: 50,
+        backgroundColor: AppTheme.primaryColor,
+        backgroundImage: user?.photoUrl != null
+            ? NetworkImage(user!.photoUrl!)
+            : null,
+        child: user?.photoUrl == null
+            ? Text(
+                initials,
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              )
+            : null,
+      ),
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color color) {
+  Widget _buildStatsSection(AsyncValue<List<WatchlistItem>> watchlist) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: watchlist.when(
+        data: (items) => _buildStatsGrid(items),
+        loading: () => _buildStatsLoading(),
+        error: (_, __) => _buildStatsGrid([]),
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid(List<WatchlistItem> items) {
+    final planToWatch = items
+        .where((i) => i.status == WatchlistStatus.planToWatch)
+        .length;
+    final stillWatching = items
+        .where((i) => i.status == WatchlistStatus.stillWatching)
+        .length;
+    final watched = items
+        .where((i) => i.status == WatchlistStatus.watched)
+        .length;
+    final favorites = items.where((i) => i.isFavorite).length;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Your Stats',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.schedule,
+                  value: planToWatch.toString(),
+                  label: 'Plan',
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.play_circle,
+                  value: stillWatching.toString(),
+                  label: 'Watching',
+                  color: Colors.blue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.check_circle,
+                  value: watched.toString(),
+                  label: 'Watched',
+                  color: Colors.green,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.favorite,
+                  value: favorites.toString(),
+                  label: 'Favorites',
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsLoading() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
+          Container(
+            height: 20,
+            width: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey[800],
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[400])),
+          const SizedBox(height: 16),
+          Row(
+            children: List.generate(
+              2,
+              (index) => Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: index == 0 ? 12 : 0),
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSection({
-    required BuildContext context,
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+  Widget _buildQuickActions(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildActionButton(
+              icon: Icons.search,
+              label: 'Discover',
               color: AppTheme.primaryColor,
+              onTap: () => context.go('/search'),
             ),
           ),
-        ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: AppTheme.darkCard,
-            borderRadius: BorderRadius.circular(16),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildActionButton(
+              icon: Icons.bookmark,
+              label: 'Watchlist',
+              color: Colors.blue,
+              onTap: () => context.go('/watchlist'),
+            ),
           ),
-          child: Column(children: children),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildActionButton(
+              icon: Icons.home,
+              label: 'Home',
+              color: Colors.green,
+              onTap: () => context.go('/home'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildListTile({
-    required BuildContext context,
-    WidgetRef? ref,
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsSection(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Column(
+          children: [
+            _buildSettingsTile(
+              icon: Icons.edit,
+              title: 'Edit Profile',
+              subtitle: 'Update your name and photo',
+              onTap: () => _showEditProfile(context, ref),
+            ),
+            const Divider(height: 1, indent: 72),
+            _buildDarkModeTile(ref),
+            const Divider(height: 1, indent: 72),
+            _buildSettingsTile(
+              icon: Icons.info,
+              title: 'About',
+              subtitle: 'Version 1.0.0',
+              onTap: () => _showAbout(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsTile({
     required IconData icon,
     required String title,
-    String? subtitle,
-    Widget? trailing,
+    required String subtitle,
     VoidCallback? onTap,
+    Widget? trailing,
+    bool showArrow = true,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: AppTheme.primaryColor),
-      title: Text(title),
-      subtitle: subtitle != null ? Text(subtitle) : null,
-      trailing: trailing ?? const Icon(Icons.chevron_right),
-      onTap: onTap,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppTheme.primaryColor, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    ),
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing!,
+              if (showArrow && trailing == null)
+                Icon(Icons.chevron_right, color: Colors.grey[600]),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  void _showEditProfileDialog(BuildContext context, WidgetRef ref, User? user) {
+  Widget _buildDarkModeTile(WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
+    return _buildSettingsTile(
+      icon: Icons.dark_mode,
+      title: 'Dark Mode',
+      subtitle: isDark ? 'Enabled' : 'Disabled',
+      trailing: Switch(
+        value: isDark,
+        onChanged: (v) => ref.read(themeModeProvider.notifier).toggleTheme(),
+        activeTrackColor: AppTheme.primaryColor,
+      ),
+      showArrow: false,
+    );
+  }
+
+  Widget _buildSignOutButton(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showSignOutDialog(context, ref),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.logout, color: Colors.red),
+                SizedBox(width: 12),
+                Text(
+                  'Sign Out',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showEditProfile(BuildContext context, WidgetRef ref) {
+    final user = ref.read(currentUserProvider);
     final nameController = TextEditingController(text: user?.displayName ?? '');
-    final emailController = TextEditingController(text: user?.email ?? '');
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Edit Profile'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Display Name',
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
-              ),
-            ),
-          ],
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ref
-                  .read(authNotifierProvider.notifier)
-                  .updateProfile(displayName: nameController.text);
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile updated successfully')),
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showChangePasswordDialog(BuildContext context, WidgetRef ref) {
-    final emailController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reset Password'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Enter your email to receive a password reset link.'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
-              ),
-            ),
-          ],
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ref
-                  .read(authNotifierProvider.notifier)
-                  .resetPassword(emailController.text);
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Password reset email sent')),
-              );
-            },
-            child: const Text('Send'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.movie_filter, color: Colors.white),
-            ),
-            const SizedBox(width: 12),
-            const Text('CineWatch'),
-          ],
-        ),
-        content: const Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Version 1.0.0'),
-            SizedBox(height: 16),
-            Text(
-              'CineWatch is your ultimate movie companion. Discover new movies, track your watchlist, and never miss a great film.',
-              style: TextStyle(height: 1.5),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[600],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Edit Profile',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: 'Display Name',
+                prefixIcon: const Icon(Icons.person_outline),
+                filled: true,
+                fillColor: AppTheme.darkCard,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  ref
+                      .read(authNotifierProvider.notifier)
+                      .updateProfile(displayName: nameController.text);
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Profile updated!'),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Save Changes'),
+              ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
-          ),
-        ],
+      ),
+    );
+  }
+
+  void _showAbout(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[600],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(
+                Icons.movie_filter,
+                size: 60,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'CineWatch',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text('Version 1.0.0', style: TextStyle(color: Colors.grey[400])),
+            const SizedBox(height: 24),
+            const Text(
+              'Your ultimate movie companion.',
+              textAlign: TextAlign.center,
+              style: TextStyle(height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Close'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSignOutDialog(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.logout, size: 40, color: Colors.red),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Sign Out',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Are you sure you want to sign out?',
+              style: TextStyle(color: Colors.grey[400]),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      await ref.read(authNotifierProvider.notifier).signOut();
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Sign Out'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

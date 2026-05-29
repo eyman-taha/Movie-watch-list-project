@@ -2,11 +2,13 @@ import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'dart:html' as html;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/utils.dart';
+import '../../../domain/entities/movie.dart';
 import '../../../domain/entities/watchlist_item.dart';
 import '../../../domain/entities/movie_details.dart';
 import '../../providers/movie_providers.dart';
@@ -123,24 +125,35 @@ class MovieDetailsScreen extends ConsumerWidget {
                   color: isFavorite ? Colors.red : Colors.white,
                 ),
               ),
-              onPressed: () {
-                if (isInWatchlist) {
-                  ref.read(watchlistProvider.notifier).toggleFavorite(movie.id);
-                } else {
-                  ref
-                      .read(watchlistProvider.notifier)
-                      .addToWatchlist(movie.toMovie(), isFavorite: true);
+              onPressed: () async {
+                try {
+                  if (isInWatchlist) {
+                    await ref.read(watchlistProvider.notifier).toggleFavorite(movie.id);
+                  } else {
+                    await ref.read(watchlistProvider.notifier).addToWatchlist(movie.toMovie(), isFavorite: true);
+                  }
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isInWatchlist
+                              ? 'Removed from favorites'
+                              : 'Added to favorites',
+                        ),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  }
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Failed to update favorites'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      isFavorite
-                          ? 'Removed from favorites'
-                          : 'Added to favorites',
-                    ),
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
               },
             ),
           ],
@@ -210,7 +223,7 @@ class MovieDetailsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            DateUtils.formatDate(movie.releaseDate),
+                            AppDateUtils.formatDate(movie.releaseDate),
                             style: TextStyle(color: Colors.grey[400]),
                           ),
                           if (movie.runtime != null)
@@ -260,23 +273,10 @@ class MovieDetailsScreen extends ConsumerWidget {
           ),
         ),
         similarMoviesAsync.when(
-          data: (movies) => movies.isEmpty
+              data: (movies) => movies.isEmpty
               ? const SliverToBoxAdapter(child: SizedBox.shrink())
               : SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 220,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: movies.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: MovieCard(movie: movies[index], height: 200),
-                        );
-                      },
-                    ),
-                  ),
+                  child: SimilarMoviesList(movies: movies),
                 ),
           loading: () => const SliverToBoxAdapter(
             child: SizedBox(
@@ -344,17 +344,30 @@ class MovieDetailsScreen extends ConsumerWidget {
             child: isInWatchlist
                 ? OutlinedButton.icon(
                     key: const ValueKey('remove'),
-                    onPressed: () {
-                      ref
-                          .read(watchlistProvider.notifier)
-                          .removeFromWatchlist(movie.id);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${movie.title} removed from watchlist',
-                          ),
-                        ),
-                      );
+                    onPressed: () async {
+                      try {
+                        await ref
+                            .read(watchlistProvider.notifier)
+                            .removeFromWatchlist(movie.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${movie.title} removed from watchlist',
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to remove'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
                     },
                     icon: const Icon(Icons.check),
                     label: const Text('In Watchlist'),
@@ -365,15 +378,28 @@ class MovieDetailsScreen extends ConsumerWidget {
                   )
                 : ElevatedButton.icon(
                     key: const ValueKey('add'),
-                    onPressed: () {
-                      ref
-                          .read(watchlistProvider.notifier)
-                          .addToWatchlist(movie.toMovie());
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${movie.title} added to watchlist'),
-                        ),
-                      );
+                    onPressed: () async {
+                      try {
+                        await ref
+                            .read(watchlistProvider.notifier)
+                            .addToWatchlist(movie.toMovie());
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${movie.title} added to watchlist'),
+                            ),
+                          );
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to add'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('Add to Watchlist'),
@@ -395,9 +421,9 @@ class MovieDetailsScreen extends ConsumerWidget {
   Future<void> _openTrailer(BuildContext context, MovieDetails movie) async {
     final trailer = movie.trailer;
     if (trailer != null && trailer.isYouTube) {
-      final url = Uri.parse('https://www.youtube.com/watch?v=${trailer.key}');
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
+      final url = 'https://www.youtube.com/watch?v=${trailer.key}';
+      if (kIsWeb) {
+        html.window.open(url, '_blank');
       }
     } else {
       ScaffoldMessenger.of(
@@ -487,5 +513,51 @@ class MovieDetailsScreen extends ConsumerWidget {
     if (rating >= 7.0) return Colors.green;
     if (rating >= 5.0) return Colors.orange;
     return Colors.red;
+  }
+}
+
+class SimilarMoviesList extends ConsumerWidget {
+  final List<Movie> movies;
+
+  const SimilarMoviesList({super.key, required this.movies});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final watchlistAsync = ref.watch(watchlistProvider);
+    final favoriteIds = watchlistAsync.whenOrNull(
+          data: (items) => items
+              .where((WatchlistItem i) => i.isFavorite)
+              .map((WatchlistItem i) => i.movieId)
+              .toSet(),
+        ) ??
+        <int>{};
+
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: movies.length,
+        itemBuilder: (context, index) {
+          final movie = movies[index];
+          final isFav = favoriteIds.contains(movie.id);
+          return Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: MovieCard(
+              movie: movie,
+              height: 200,
+              isFavorite: isFav,
+              onToggleFavorite: (fav) async {
+                if (isFav) {
+                  await ref.read(watchlistProvider.notifier).removeFromWatchlist(movie.id);
+                } else {
+                  await ref.read(watchlistProvider.notifier).addToWatchlist(movie, isFavorite: true);
+                }
+              },
+            ),
+          );
+        },
+      ),
+    );
   }
 }

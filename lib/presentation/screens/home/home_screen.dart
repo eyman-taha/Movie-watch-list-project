@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -8,7 +9,9 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/utils.dart';
 import '../../../domain/entities/movie.dart';
+import '../../../domain/entities/watchlist_item.dart';
 import '../../providers/movie_providers.dart';
+import '../../providers/watchlist_providers.dart';
 import '../../widgets/movie_card/movie_card.dart';
 import '../../widgets/shimmer/shimmer_widgets.dart';
 
@@ -22,6 +25,9 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   late PageController _pageController;
   int _currentPage = 0;
+  Timer? _autoScrollTimer;
+  bool _isDragging = false;
+  int _trendingCount = 0;
 
   @override
   void initState() {
@@ -31,8 +37,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
+    _autoScrollTimer?.cancel();
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel();
+    if (_trendingCount <= 1) return;
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!_isDragging && _pageController.hasClients) {
+        final nextPage = (_currentPage + 1) % _trendingCount;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
   }
 
   @override
@@ -86,7 +108,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final trendingAsync = ref.watch(trendingMoviesProvider);
 
     return trendingAsync.when(
-      data: (movies) => _buildCarousel(movies),
+      data: (movies) {
+        if (_trendingCount != movies.length) {
+          _trendingCount = movies.length;
+          WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
+        }
+        return _buildCarousel(movies);
+      },
       loading: () => SizedBox(
         height: 450,
         child: Center(child: MovieCardShimmer(width: 300, height: 450)),
@@ -98,19 +126,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 8, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          TextButton(
+            onPressed: () => context.go('/search'),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('See All'),
+                SizedBox(width: 4),
+                Icon(Icons.arrow_forward_ios, size: 12),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPopularSection() {
     final moviesAsync = ref.watch(popularMoviesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-          child: Text(
-            'Popular Movies',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
+        _buildSectionHeader('Popular Movies'),
         moviesAsync.when(
           data: (movies) => _buildMovieList(movies),
           loading: () => const MovieListShimmer(),
@@ -129,13 +177,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-          child: Text(
-            'Top Rated',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
+        _buildSectionHeader('Top Rated'),
         moviesAsync.when(
           data: (movies) => _buildMovieList(movies),
           loading: () => const MovieListShimmer(),
@@ -154,13 +196,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-          child: Text(
-            'Now Playing',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
+        _buildSectionHeader('Now Playing'),
         moviesAsync.when(
           data: (movies) => _buildMovieList(movies),
           loading: () => const MovieListShimmer(),
@@ -179,13 +215,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-          child: Text(
-            'Upcoming',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
+        _buildSectionHeader('Upcoming'),
         moviesAsync.when(
           data: (movies) => _buildMovieList(movies),
           loading: () => const MovieListShimmer(),
@@ -215,17 +245,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         SizedBox(
           height: 450,
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
+          child: NotificationListener<ScrollStartNotification>(
+            onNotification: (_) {
+              _isDragging = true;
+              return false;
             },
-            itemCount: movies.length,
-            itemBuilder: (context, index) {
-              return _buildCarouselItem(movies[index], index);
-            },
+            child: NotificationListener<ScrollEndNotification>(
+              onNotification: (_) {
+                _isDragging = false;
+                return false;
+              },
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                itemCount: movies.length,
+                itemBuilder: (context, index) {
+                  return _buildCarouselItem(movies[index], index);
+                },
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -366,7 +408,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    DateUtils.formatYear(movie.releaseDate),
+                                    AppDateUtils.formatYear(movie.releaseDate),
                                     style: TextStyle(
                                       color: Colors.white.withValues(
                                         alpha: 0.8,
@@ -408,6 +450,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
 
+    final watchlistAsync = ref.watch(watchlistProvider);
+    final watchlistItems = watchlistAsync.whenOrNull(
+          data: (items) => items,
+        ) ??
+        <WatchlistItem>[];
+    final favoriteIds = watchlistItems
+        .where((WatchlistItem i) => i.isFavorite)
+        .map((WatchlistItem i) => i.movieId)
+        .toSet();
+
     return AnimationLimiter(
       child: SizedBox(
         height: 210,
@@ -416,6 +468,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: movies.length,
           itemBuilder: (context, index) {
+            final movie = movies[index];
+            final isFav = favoriteIds.contains(movie.id);
             return AnimationConfiguration.staggeredList(
               position: index,
               duration: const Duration(milliseconds: 375),
@@ -424,7 +478,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: FadeInAnimation(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 12),
-                    child: MovieCard(movie: movies[index]),
+                    child: MovieCard(
+                      movie: movie,
+                      isFavorite: isFav,
+                      onToggleFavorite: (fav) async {
+                        if (isFav) {
+                          await ref.read(watchlistProvider.notifier).removeFromWatchlist(movie.id);
+                        } else {
+                          await ref.read(watchlistProvider.notifier).addToWatchlist(movie, isFavorite: true);
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),

@@ -131,3 +131,12 @@ Future<ProviderContainer> initProviders() async {
 
   return container;
 }
+
+final clearCacheProvider = Provider<Future<void> Function()>((ref) {
+  return () async {
+    final movieLocal = ref.read(movieLocalDataSourceProvider);
+    final searchHistory = ref.read(searchHistoryDataSourceProvider);
+    await movieLocal.clearCache();
+    await searchHistory.clearHistory();
+  };
+});

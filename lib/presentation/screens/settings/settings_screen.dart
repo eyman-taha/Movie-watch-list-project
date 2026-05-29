@@ -1,3 +1,4 @@
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/settings_providers.dart';
+import '../../providers/providers.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -76,14 +78,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: 'Language',
             subtitle: 'English',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showSnackBar('Language settings coming soon'),
+            onTap: () => _showLanguageDialog(),
           ),
           _buildSettingsTile(
             icon: Icons.movie_filter_outlined,
             title: 'Content Rating',
             subtitle: 'All ages',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showSnackBar('Content rating settings coming soon'),
+            onTap: () => _showContentRatingDialog(),
           ),
           const SizedBox(height: 24),
           _buildSectionHeader('Storage'),
@@ -108,14 +110,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: 'Privacy Policy',
             subtitle: 'Learn how we handle your data',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showSnackBar('Privacy policy coming soon'),
+            onTap: () => html.window.open('https://cinewatch.app/privacy', '_blank'),
           ),
           _buildSettingsTile(
             icon: Icons.description_outlined,
             title: 'Terms of Service',
             subtitle: 'Read our terms',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showSnackBar('Terms of service coming soon'),
+            onTap: () => html.window.open('https://cinewatch.app/terms', '_blank'),
           ),
           _buildSettingsTile(
             icon: Icons.code_outlined,
@@ -135,14 +137,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: 'Help & FAQ',
             subtitle: 'Get answers to common questions',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showSnackBar('Help center coming soon'),
+            onTap: () => html.window.open('https://github.com/eyman-taha/Movie-watch-list-project/issues', '_blank'),
           ),
           _buildSettingsTile(
             icon: Icons.feedback_outlined,
             title: 'Send Feedback',
             subtitle: 'Help us improve the app',
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showSnackBar('Feedback feature coming soon'),
+            onTap: () => html.window.open('https://github.com/eyman-taha/Movie-watch-list-project/issues/new', '_blank'),
           ),
           const SizedBox(height: 32),
           _buildSignOutButton(),
@@ -218,6 +220,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  void _showLanguageDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Language'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(title: Text('English'), leading: Icon(Icons.check), selected: true),
+            ListTile(title: Text('Spanish'), leading: Icon(Icons.add), enabled: false),
+            ListTile(title: Text('French'), leading: Icon(Icons.add), enabled: false),
+            ListTile(title: Text('Arabic'), leading: Icon(Icons.add), enabled: false),
+          ],
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+      ),
+    );
+  }
+
+  void _showContentRatingDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Content Rating'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(title: Text('All Ages'), leading: Icon(Icons.check), selected: true),
+            ListTile(title: Text('Teen (13+)'), leading: Icon(Icons.add), enabled: false),
+            ListTile(title: Text('Adult (18+)'), leading: Icon(Icons.add), enabled: false),
+          ],
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+      ),
+    );
+  }
+
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(
       context,
@@ -238,11 +277,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cache cleared successfully')),
-              );
+            onPressed: () async {
+              await ref.read(clearCacheProvider)();
+              if (ctx.mounted) Navigator.pop(ctx);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Cache cleared successfully')),
+                );
+              }
             },
             child: const Text('Clear'),
           ),

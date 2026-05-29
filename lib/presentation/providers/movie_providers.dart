@@ -63,9 +63,24 @@ final searchMoviesProvider = FutureProvider.autoDispose<List<Movie>>((
   ref,
 ) async {
   final query = ref.watch(searchQueryProvider);
-  if (query.isEmpty) return [];
+  final genre = ref.watch(selectedGenreProvider);
+  final year = ref.watch(filterYearProvider);
+  final rating = ref.watch(filterRatingProvider);
   final repository = ref.watch(movieRepositoryProvider);
-  return repository.searchMovies(query);
+
+  if (query.isNotEmpty) {
+    return repository.searchMovies(query);
+  }
+
+  if (genre != null || year != null || rating != null) {
+    return repository.discoverMovies(
+      genreId: genre?.id,
+      year: year,
+      minRating: rating?.toInt(),
+    );
+  }
+
+  return [];
 });
 
 final selectedGenreProvider = StateProvider<Genre?>((ref) => null);

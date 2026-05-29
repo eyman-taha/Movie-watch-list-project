@@ -221,7 +221,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
+                await ref.read(searchHistoryDataSourceProvider).clearHistory();
                 setState(() {
                   _recentSearches.clear();
                 });
@@ -237,10 +238,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             title: Text(_recentSearches[index]),
             trailing: IconButton(
               icon: const Icon(Icons.close),
-              onPressed: () {
+              onPressed: () async {
+                final removed = _recentSearches[index];
                 setState(() {
                   _recentSearches.removeAt(index);
                 });
+                await ref.read(searchHistoryDataSourceProvider).removeSearch(removed);
               },
             ),
             onTap: () {

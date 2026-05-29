@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
-class DateUtils {
-  DateUtils._();
+class AppDateUtils {
+  AppDateUtils._();
 
   static String formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) return 'Unknown';

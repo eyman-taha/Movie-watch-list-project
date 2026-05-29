@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide DateUtils;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
@@ -8,12 +9,14 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/utils.dart';
 import '../../../domain/entities/movie.dart';
 
-class MovieCard extends StatelessWidget {
+class MovieCard extends ConsumerWidget {
   final Movie movie;
   final double width;
   final double height;
   final bool showRating;
   final VoidCallback? onTap;
+  final bool? isFavorite;
+  final ValueChanged<bool>? onToggleFavorite;
 
   const MovieCard({
     super.key,
@@ -22,10 +25,12 @@ class MovieCard extends StatelessWidget {
     this.height = 210,
     this.showRating = true,
     this.onTap,
+    this.isFavorite,
+    this.onToggleFavorite,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: onTap ?? () => context.push('/movie/${movie.id}'),
       child: Container(
@@ -88,6 +93,26 @@ class MovieCard extends StatelessWidget {
                     ),
                   ),
                 ),
+              if (isFavorite != null && onToggleFavorite != null)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: () => onToggleFavorite!(!isFavorite!),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isFavorite! ? Icons.favorite : Icons.favorite_border,
+                        size: 18,
+                        color: isFavorite! ? Colors.red : Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -120,7 +145,7 @@ class MovieCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        DateUtils.formatYear(movie.releaseDate),
+                        AppDateUtils.formatYear(movie.releaseDate),
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 10,
@@ -225,7 +250,7 @@ class MovieListTile extends StatelessWidget {
         children: [
           const SizedBox(height: 4),
           Text(
-            DateUtils.formatYear(movie.releaseDate),
+            AppDateUtils.formatYear(movie.releaseDate),
             style: TextStyle(color: Colors.grey[400]),
           ),
           const SizedBox(height: 4),

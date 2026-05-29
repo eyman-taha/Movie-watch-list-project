@@ -9,4 +9,7 @@ abstract class WatchlistRepository {
   Future<bool> isInWatchlist(int movieId);
   Future<List<WatchlistItem>> getItemsByStatus(WatchlistStatus status);
   Future<void> clearAll();
+  void setCurrentUser(String? userId);
+  String? get lastError;
+  void clearError();
 }
