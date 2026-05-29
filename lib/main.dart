@@ -132,10 +132,12 @@ GoRouter createRouter(Ref ref) {
       ),
       GoRoute(
         path: '/settings',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/movie/:id',
+        parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
           final movieId = int.parse(state.pathParameters['id']!);
           return CustomTransitionPage(

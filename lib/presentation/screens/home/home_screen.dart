@@ -264,7 +264,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Transform.scale(
             scale: value,
             child: GestureDetector(
-              onTap: () => context.go('/movie/${movie.id}'),
+              onTap: () => context.push('/movie/${movie.id}'),
               child: Hero(
                 tag: 'trending_${movie.id}',
                 child: Container(
