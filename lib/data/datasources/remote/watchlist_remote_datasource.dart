@@ -4,6 +4,7 @@ import '../../models/movie_model.dart';
 
 abstract class WatchlistRemoteDataSource {
   Future<List<WatchlistItemModel>> getUserWatchlist(String userId);
+  Stream<List<WatchlistItemModel>> watchUserWatchlist(String userId);
   Future<void> addToWatchlist(String userId, WatchlistItemModel item);
   Future<void> updateWatchlistItem(String userId, WatchlistItemModel item);
   Future<void> removeFromWatchlist(String userId, int movieId);
@@ -25,26 +26,37 @@ class WatchlistRemoteDataSourceImpl implements WatchlistRemoteDataSource {
   Future<List<WatchlistItemModel>> getUserWatchlist(String userId) async {
     try {
       final snapshot = await _getUserWatchlistRef(userId).get();
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return WatchlistItemModel(
-          userId: data['userId'] as String?,
-          movieId: (data['movieId'] as num).toInt(),
-          movie: _movieFromMap(data['movie'] as Map<String, dynamic>),
-          statusIndex: (data['statusIndex'] as num).toInt(),
-          userRating: (data['userRating'] as num?)?.toDouble(),
-          isFavorite: data['isFavorite'] as bool? ?? false,
-          addedAt: DateTime.parse(data['addedAt'] as String),
-          updatedAt: DateTime.parse(data['updatedAt'] as String),
-          watchedAt: data['watchedAt'] != null
-              ? DateTime.parse(data['watchedAt'] as String)
-              : null,
-          note: data['note'] as String?,
-        );
-      }).toList();
+      return snapshot.docs.map((doc) => _parseDoc(doc)).toList();
     } catch (_) {
       return [];
     }
+  }
+
+  @override
+  Stream<List<WatchlistItemModel>> watchUserWatchlist(String userId) {
+    return _getUserWatchlistRef(userId).snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => _parseDoc(doc)).toList();
+    });
+  }
+
+  WatchlistItemModel _parseDoc(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data()!;
+    return WatchlistItemModel(
+      userId: data['userId'] as String?,
+      movieId: (data['movieId'] as num).toInt(),
+      movie: _movieFromMap(data['movie'] as Map<String, dynamic>),
+      statusIndex: (data['statusIndex'] as num).toInt(),
+      userRating: (data['userRating'] as num?)?.toDouble(),
+      isFavorite: data['isFavorite'] as bool? ?? false,
+      addedAt: DateTime.parse(data['addedAt'] as String),
+      updatedAt: DateTime.parse(data['updatedAt'] as String),
+      watchedAt: data['watchedAt'] != null
+          ? DateTime.parse(data['watchedAt'] as String)
+          : null,
+      note: data['note'] as String?,
+    );
   }
 
   @override

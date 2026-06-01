@@ -5,6 +5,15 @@ A feature-rich movie discovery and watchlist management app built with Flutter.
 ![Flutter](https://img.shields.io/badge/Flutter-3.41.4-blue)
 ![Dart](https://img.shields.io/badge/Dart-3.11.1-blue)
 ![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web-green)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://movie-watch-list-d2665.web.app)
+[![CI/CD](https://github.com/eyman-taha/Movie-watch-list-project/actions/workflows/build-apk.yml/badge.svg)](https://github.com/eyman-taha/Movie-watch-list-project/actions/workflows/build-apk.yml)
+[![Download APK](https://img.shields.io/badge/Download-APK-orange)](https://github.com/eyman-taha/Movie-watch-list-project/releases)
+
+## Deployment
+
+- **Live Web App**: [movie-watch-list-d2665.web.app](https://movie-watch-list-d2665.web.app)
+- **Android APK**: [Download latest release](https://github.com/eyman-taha/Movie-watch-list-project/releases)
+- **CI/CD Pipeline**: Automated build, analyze, and deploy via GitHub Actions
 
 ## Features
 
@@ -12,6 +21,8 @@ A feature-rich movie discovery and watchlist management app built with Flutter.
 - **Email/Password Authentication**: Register and login with email
 - **Google Sign-In**: Quick and easy authentication with Google
 - **Password Reset**: Reset password via email
+- **Forgot Password**: Full-screen forgot password with Firebase email reset
+- **Delete Account**: Account deletion with confirmation dialog
 - **Protected Routes**: Only authenticated users can access watchlist
 
 ### Movie Discovery
@@ -20,6 +31,7 @@ A feature-rich movie discovery and watchlist management app built with Flutter.
 - **Top Rated**: Discover the highest-rated movies
 - **Now Playing**: See what's currently in theaters
 - **Upcoming Releases**: Get ahead with upcoming movie releases
+- **YouTube Trailers**: Inline trailer player with YoutubePlayerController
 
 ### Watchlist System
 - **3 Status Categories**:
@@ -28,8 +40,10 @@ A feature-rich movie discovery and watchlist management app built with Flutter.
   - Watched
 - **Favorites**: Mark movies as favorites
 - **Personal Ratings**: Rate movies on your own scale
+- **Realtime Sync**: Watchlist updates live across devices via Firestore snapshot streams
+- **Cross-Device Sync**: Changes made on one device appear instantly on all devices
+- **Offline Support**: Data persists locally via Hive caching
 - **User-Specific**: Each user's watchlist is personal and secure
-- **Offline Support**: Data persists locally
 
 ### Search & Discovery
 - Real-time movie search with debounce
@@ -38,17 +52,23 @@ A feature-rich movie discovery and watchlist management app built with Flutter.
 
 ### User Profile
 - View and edit profile information
-- View watchlist statistics
+- View watchlist statistics with animated counters
+- 6 settings groups (Account, Appearance, Notifications, Support, About, Danger Zone)
 - Change password
 - Sign out
 
 ### User Experience
-- Dark mode as default theme
+- Dark mode as default theme with light/dark toggle
+- Cinematic gradient headers and premium UI design
 - Smooth animations and transitions
 - Hero animations for movie posters
 - Loading skeletons for better UX
 - Pull-to-refresh functionality
 - Responsive design for mobile, tablet, and web
+- Push notifications via Firebase Cloud Messaging
+- Deep links for movie sharing (`/movie/:id`)
+- Onboarding flow on first launch
+- Localization: English + Arabic (RTL)
 
 ## Architecture
 
@@ -88,6 +108,19 @@ lib/
     │   └── watchlist/      # Watchlist screen
     └── widgets/            # Reusable widgets
 ```
+
+## CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration and deployment:
+
+| Step | Description |
+|------|-------------|
+| **Analyze** | `dart analyze lib/` — ensures zero warnings/errors |
+| **Build APK** | `flutter build apk --release` — produces release APK artifact |
+| **Build Web** | `flutter build web` — produces web build artifact |
+| **Deploy** | Deploys web build to Firebase Hosting on push to `main` |
+
+The web app is automatically deployed to [movie-watch-list-d2665.web.app](https://movie-watch-list-d2665.web.app) on every push to main. The latest APK can be downloaded from [GitHub Releases](https://github.com/eyman-taha/Movie-watch-list-project/releases).
 
 ## Tech Stack
 
@@ -261,6 +294,18 @@ dependencies:
   connectivity_plus: ^6.0.3    # Network status
   shared_preferences: ^2.2.2  # Key-value storage
 ```
+
+## Test Cases
+
+Comprehensive test cases are documented in [docs/testcases.md](docs/testcases.md) covering:
+- Authentication (register, login, forgot password, delete account, logout)
+- Movie discovery (home load, details, trailers, search, genre filter)
+- Watchlist (add, status change, remove, favorites, persistence, cross-device sync)
+- Profile & settings (display, dark mode, language, cache)
+- Onboarding (first launch, completion)
+- Deep links
+- Push notifications
+- Responsive design (mobile, tablet, web)
 
 ## Troubleshooting
 

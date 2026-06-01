@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/watchlist_item.dart';
 import '../../domain/entities/movie.dart';
@@ -22,22 +23,29 @@ final watchlistProvider =
 class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
   final WatchlistRepository _repository;
   String? _userId;
+  StreamSubscription<List<WatchlistItem>>? _watchlistSubscription;
 
   WatchlistNotifier(this._repository, this._userId)
     : super(const AsyncValue.loading()) {
     _repository.setCurrentUser(_userId);
-    _load();
+    _subscribeToStream();
   }
 
-  Future<void> _load() async {
-    state = const AsyncValue.loading();
-    try {
-      _repository.setCurrentUser(_userId);
-      final items = await _repository.getAllItems();
+  void _subscribeToStream() {
+    _watchlistSubscription?.cancel();
+    _watchlistSubscription = _repository.watchItems().listen((items) {
+      if (!mounted) return;
       state = AsyncValue.data(items);
-    } catch (e, st) {
+    }, onError: (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
-    }
+    });
+  }
+
+  @override
+  void dispose() {
+    _watchlistSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> addToWatchlist(
@@ -141,13 +149,13 @@ class WatchlistNotifier extends StateNotifier<AsyncValue<List<WatchlistItem>>> {
   }
 
   Future<void> refresh() async {
-    await _load();
+    _subscribeToStream();
   }
 
   void syncWithUser(String? userId) {
     _userId = userId;
     _repository.setCurrentUser(userId);
-    _load();
+    _subscribeToStream();
   }
 }
 

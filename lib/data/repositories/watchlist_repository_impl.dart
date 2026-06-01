@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../../domain/entities/watchlist_item.dart';
 import '../../domain/entities/movie.dart';
 import '../../domain/repositories/watchlist_repository.dart';
@@ -49,6 +50,18 @@ class WatchlistRepositoryImpl implements WatchlistRepository {
     }
     final models = await _localDataSource.getAllItems();
     return models.map((m) => _toEntityFromModel(m)).toList();
+  }
+
+  @override
+  Stream<List<WatchlistItem>> watchItems() {
+    if (_currentUserId != null && _remoteDataSource != null) {
+      return _remoteDataSource.watchUserWatchlist(_currentUserId!).map(
+        (models) => models.map((m) => _toEntity(m)).toList(),
+      );
+    }
+    return _localDataSource.getAllItems().asStream().map(
+      (models) => models.map((m) => _toEntityFromModel(m)).toList(),
+    );
   }
 
   @override
